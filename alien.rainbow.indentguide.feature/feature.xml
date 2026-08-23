@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="alien.rainbow.indentguide.feature"
+      label="Rainbow Indent Guide"
+      version="1.0.0"
+      provider-name="Simone Platania">
+
+   <description>
+      A fork of Indent Guide (https://github.com/kiritsuku/IndentGuide) adding
+      per level rainbow colors, highlighting of the block holding the caret and
+      detection of irregular indentation.
+   </description>
+
+   <copyright>
+      Fork of Indent Guide, Copyright (c) 2014 Simon Schaefer, MIT License.
+      Portions Copyright (c) 2006, 2009 Wind River Systems, Inc., IBM
+      Corporation and others, Eclipse Public License v1.0.
+      Fork modifications Copyright (c) 2026 Simone Platania.
+      No claim of ownership is made over the upstream code; the notices in the
+      individual source files are authoritative.
+   </copyright>
+
+   <license url="http://www.eclipse.org/legal/epl-v10.html">
+      The modifications contributed by this fork are made available under the
+      terms of the Eclipse Public License v1.0, which accompanies this
+      distribution and is available at
+      http://www.eclipse.org/legal/epl-v10.html
+      The original work remains under the MIT License reproduced in the LICENSE
+      file of the source repository.
+   </license>
+
+   <plugin
+         id="alien.rainbow.indentguide"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

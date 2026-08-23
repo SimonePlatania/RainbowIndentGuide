@@ -1,7 +1,6 @@
 # Rainbow Indent Guide
 
-A fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide) for Eclipse,
-bringing the guides closer to what IntelliJ IDEA draws.
+A fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide) for Eclipse.
 
 - one color per indentation level (rainbow), cycled past the seventh
 - the guide of the block holding the caret is lightened, and follows the caret

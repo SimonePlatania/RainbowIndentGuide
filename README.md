@@ -2,6 +2,8 @@
 
 A fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide) for Eclipse.
 
+<img width="1536" height="1024" alt="Image" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />
+
 - one color per indentation level (rainbow), cycled past the seventh
 - the guide of the block holding the caret is lightened, and follows the caret
 - guides follow the brace structure: they start below the line opening the

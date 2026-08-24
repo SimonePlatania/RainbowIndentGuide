@@ -1,6 +1,6 @@
 # Rainbow Indent Guide
 
-Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases.
+🌈Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases.🌈
 
 **[⬇ Download 1.0.0](https://github.com/SimonePlatania/RainbowIndentGuide/releases/tag/v1.0.0)**
 

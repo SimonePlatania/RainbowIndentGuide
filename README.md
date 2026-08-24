@@ -7,6 +7,36 @@
 
 <img width="1536" height="1024" alt="Rainbow indent guides in the Eclipse Java editor" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />
 
+## Screenshots
+
+## Screenshots
+
+<img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/e864e83c-bf64-4700-952c-92c12953a23b" alt="Rainbow guides across nesting levels" />
+    </td>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/8a005e7e-5231-4446-9c72-6bfa4ef42c0b" alt="Braces coloured to match their guide" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/09d04506-54e6-44f4-8cfb-2b445ba58425" alt="Active block highlighted" />
+    </td>
+    <td colspan="2">
+      <img src="https://github.com/user-attachments/assets/c020f407-893b-4138-ba9d-2970a7c0227d" alt="Preference page" />
+    </td>
+  </tr>
+  <tr>
+
+  </tr>
+</table>
+
+<img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
+
 ## Features
 
 - one color per indentation level (rainbow), cycled past the seventh

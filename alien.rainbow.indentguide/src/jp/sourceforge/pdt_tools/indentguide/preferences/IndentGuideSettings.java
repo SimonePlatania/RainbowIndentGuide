@@ -41,10 +41,13 @@ public class IndentGuideSettings {
 	private int activeAlpha = IndentGuideStyle.DEFAULT_ACTIVE_ALPHA;
 	private int activeLighten = IndentGuideStyle.DEFAULT_ACTIVE_LIGHTEN;
 
+	private boolean braceColorEnabled = IndentGuideStyle.DEFAULT_BRACE_COLOR_ENABLED;
+
 	private boolean irregularEnabled;
 	private RGB irregularColor = parse(IndentGuideStyle.DEFAULT_IRREGULAR_COLOR,
 			FALLBACK);
 	private int irregularAlpha = IndentGuideStyle.DEFAULT_IRREGULAR_ALPHA;
+	private int irregularFlash = IndentGuideStyle.DEFAULT_IRREGULAR_FLASH;
 
 	/**
 	 * Rereads every value from the given store.
@@ -64,6 +67,8 @@ public class IndentGuideSettings {
 		rainbowEnabled = store.getBoolean(IndentGuideStyle.RAINBOW_ENABLED);
 		activeEnabled = store.getBoolean(IndentGuideStyle.ACTIVE_ENABLED);
 		irregularEnabled = store.getBoolean(IndentGuideStyle.IRREGULAR_ENABLED);
+		braceColorEnabled = store
+				.getBoolean(IndentGuideStyle.BRACE_COLOR_ENABLED);
 		activeLighten = store.getInt(IndentGuideStyle.ACTIVE_LIGHTEN);
 
 		activeAlpha = IndentGuideStyle.DEFAULT_ACTIVE_ALPHA;
@@ -81,6 +86,12 @@ public class IndentGuideSettings {
 				readString(store, IndentGuideStyle.IRREGULAR_COLOR,
 						IndentGuideStyle.DEFAULT_IRREGULAR_COLOR),
 				parse(IndentGuideStyle.DEFAULT_IRREGULAR_COLOR, FALLBACK));
+
+		irregularFlash = IndentGuideStyle.DEFAULT_IRREGULAR_FLASH;
+		int flash = readInt(store, IndentGuideStyle.IRREGULAR_FLASH);
+		if (flash >= 0 && flash <= 10000) {
+			irregularFlash = flash;
+		}
 
 		palette = readPalette(store);
 	}
@@ -199,5 +210,17 @@ public class IndentGuideSettings {
 
 	public int getIrregularAlpha() {
 		return irregularAlpha;
+	}
+
+	/**
+	 * @return how long a guide turning grey stays opaque, in milliseconds; 0
+	 *         disables the flash
+	 */
+	public int getIrregularFlash() {
+		return irregularFlash;
+	}
+
+	public boolean isBraceColorEnabled() {
+		return braceColorEnabled;
 	}
 }

@@ -156,6 +156,32 @@ public class IndentLevelCalculator {
 		return text.trim().startsWith("}"); //$NON-NLS-1$
 	}
 
+	/**
+	 * The index of the brace opening a block, that is, the last character of the
+	 * line. Only that one is reported: a <code>{</code> sitting anywhere else is
+	 * as likely to be inside a string or a comment as it is to open a block, and
+	 * this class has no parser to tell the two apart.
+	 *
+	 * @param text
+	 *            the text of a line
+	 * @return the character index of the brace, or -1
+	 */
+	public static int openBraceIndex(String text) {
+		return text != null && opensBlock(text) ? text.lastIndexOf('{') : -1;
+	}
+
+	/**
+	 * The index of the brace closing a block, that is, the first non whitespace
+	 * character of the line.
+	 *
+	 * @param text
+	 *            the text of a line
+	 * @return the character index of the brace, or -1
+	 */
+	public static int closeBraceIndex(String text) {
+		return text != null && closesBlock(text) ? text.indexOf('}') : -1;
+	}
+
 	private int neighbourIndent(int line, boolean forward) {
 		int lineCount = source.getLineCount();
 		int step = forward ? 1 : -1;

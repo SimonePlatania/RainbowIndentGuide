@@ -37,10 +37,18 @@ public final class IndentGuideStyle {
 	/** How much the active guide is lightened, 0 to 100 percent. */
 	public static final String ACTIVE_LIGHTEN = "active_lighten"; //$NON-NLS-1$
 
+	/** Repaint the braces of a block in the color of the guide of its line. */
+	public static final String BRACE_COLOR_ENABLED = "brace_color_enabled"; //$NON-NLS-1$
+
 	/** Draw the guides of blocks with irregular indentation in grey. */
 	public static final String IRREGULAR_ENABLED = "irregular_enabled"; //$NON-NLS-1$
 	public static final String IRREGULAR_COLOR = "irregular_color"; //$NON-NLS-1$
 	public static final String IRREGULAR_ALPHA = "irregular_alpha"; //$NON-NLS-1$
+	/**
+	 * How long a guide stays fully opaque when it turns grey, in milliseconds:
+	 * the irregular indentation is worth a glance, not a permanently loud line.
+	 */
+	public static final String IRREGULAR_FLASH = "irregular_flash"; //$NON-NLS-1$
 
 	public static final String[] DEFAULT_RAINBOW = {
 			"169,96,95", "169,138,95", "138,169,95", "95,169,126", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -51,6 +59,8 @@ public final class IndentGuideStyle {
 	public static final int DEFAULT_ACTIVE_ALPHA = 255;
 	public static final int DEFAULT_ACTIVE_LIGHTEN = 55;
 	public static final int DEFAULT_IRREGULAR_ALPHA = 70;
+	public static final int DEFAULT_IRREGULAR_FLASH = 1000;
+	public static final boolean DEFAULT_BRACE_COLOR_ENABLED = true;
 
 	private IndentGuideStyle() {
 	}
@@ -78,8 +88,10 @@ public final class IndentGuideStyle {
 		store.setDefault(ACTIVE_ENABLED, true);
 		store.setDefault(ACTIVE_ALPHA, DEFAULT_ACTIVE_ALPHA);
 		store.setDefault(ACTIVE_LIGHTEN, DEFAULT_ACTIVE_LIGHTEN);
+		store.setDefault(BRACE_COLOR_ENABLED, DEFAULT_BRACE_COLOR_ENABLED);
 		store.setDefault(IRREGULAR_ENABLED, false);
 		store.setDefault(IRREGULAR_COLOR, DEFAULT_IRREGULAR_COLOR);
 		store.setDefault(IRREGULAR_ALPHA, DEFAULT_IRREGULAR_ALPHA);
+		store.setDefault(IRREGULAR_FLASH, DEFAULT_IRREGULAR_FLASH);
 	}
 }

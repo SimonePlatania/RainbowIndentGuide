@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="Rainbow Indent Guide">
+      Indent guides for Eclipse with per level rainbow colors, highlighting of
+      the block holding the caret and detection of irregular indentation.
+      A fork of https://github.com/kiritsuku/IndentGuide
+   </description>
+   <feature url="features/alien.rainbow.indentguide.feature_1.1.0.jar" id="alien.rainbow.indentguide.feature" version="1.1.0">
+      <category name="rainbow.indentguide"/>
+   </feature>
+   <category-def name="rainbow.indentguide" label="Rainbow Indent Guide">
+      <description>
+         Indent guide plug-in
+      </description>
+   </category-def>
+</site>

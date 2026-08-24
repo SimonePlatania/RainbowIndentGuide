@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rainbow Indent Guide — Eclipse update site</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 42rem; margin: 0 auto; padding: 3rem 1.25rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+  p.lead { margin-top: 0; opacity: .75; }
+  code, .url {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .9em;
+  }
+  .url {
+    display: block; padding: .75rem 1rem; margin: 1.5rem 0;
+    border: 1px solid currentColor; border-radius: 6px;
+    overflow-wrap: anywhere;
+  }
+  ol { padding-left: 1.25rem; }
+  footer { margin-top: 3rem; font-size: .875rem; opacity: .7; }
+</style>
+</head>
+<body>
+
+<h1>Rainbow Indent Guide</h1>
+<p class="lead">Eclipse update site. This page is not the plug-in — it is the
+address you paste into Eclipse.</p>
+
+<span class="url">https://simoneplatania.github.io/RainbowIndentGuide/</span>
+
+<ol>
+  <li>In Eclipse: <em>Help &gt; Install New Software…</em></li>
+  <li><em>Add…</em>, paste the address above, give it any name</li>
+  <li>Tick <strong>Rainbow Indent Guide</strong>, then Next</li>
+  <li>Accept the license, Finish, restart when prompted</li>
+</ol>
+
+<p>Eclipse warns about unsigned content: the jar carries no digital signature.
+Confirm and continue.</p>
+
+<p>Another Indent Guide already installed? Remove it first. This one still
+contributes the extension ids of the original, so p2 refuses to install the two
+side by side rather than leave you with duplicate preference pages and two
+painters drawing over each other.</p>
+
+<footer>
+  <a href="https://github.com/SimonePlatania/RainbowIndentGuide">Source, releases and bug reports on GitHub</a>
+</footer>
+
+</body>
+</html>

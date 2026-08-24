@@ -49,8 +49,6 @@ which most Eclipse packages ship with.
     https://simoneplatania.github.io/RainbowIndentGuide/
 
 1. *Help > Install New Software...*
-
-1. *Help > Install New Software...*
 2. *Add...*, paste the address, give it any name
 3. tick **Rainbow Indent Guide**, then Next, accept the license, Finish
 4. restart when prompted

@@ -45,8 +45,8 @@ public final class IndentGuideStyle {
 	public static final String IRREGULAR_COLOR = "irregular_color"; //$NON-NLS-1$
 	public static final String IRREGULAR_ALPHA = "irregular_alpha"; //$NON-NLS-1$
 	/**
-	 * How long a guide stays fully opaque when it turns grey, in milliseconds:
-	 * the irregular indentation is worth a glance, not a permanently loud line.
+	 * How long a guide blinks white once its indentation is fixed, in
+	 * milliseconds. The greying says something is wrong; this says it is over.
 	 */
 	public static final String IRREGULAR_FLASH = "irregular_flash"; //$NON-NLS-1$
 
@@ -59,7 +59,7 @@ public final class IndentGuideStyle {
 	public static final int DEFAULT_ACTIVE_ALPHA = 255;
 	public static final int DEFAULT_ACTIVE_LIGHTEN = 55;
 	public static final int DEFAULT_IRREGULAR_ALPHA = 70;
-	public static final int DEFAULT_IRREGULAR_FLASH = 1000;
+	public static final int DEFAULT_IRREGULAR_FLASH = 450;
 	public static final boolean DEFAULT_BRACE_COLOR_ENABLED = true;
 
 	private IndentGuideStyle() {

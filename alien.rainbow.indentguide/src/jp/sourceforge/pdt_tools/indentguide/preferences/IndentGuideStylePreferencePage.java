@@ -117,7 +117,7 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 		addField(irregularAlpha);
 		irregularFlash = new IntegerFieldEditor(
 				IndentGuideStyle.IRREGULAR_FLASH,
-				"    Flash on appearance (ms, 0 = off):", parent);
+				"    Blink white when fixed (ms, 0 = off):", parent);
 		irregularFlash.setValidRange(0, 10000);
 		addField(irregularFlash);
 	}

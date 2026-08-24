@@ -9,10 +9,7 @@
 
 ## Screenshots
 
-## Screenshots
-
 <img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
-
 <table>
   <tr>
     <td width="50%">
@@ -31,10 +28,8 @@
     </td>
   </tr>
   <tr>
-
   </tr>
 </table>
-
 <img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
 
 ## Features

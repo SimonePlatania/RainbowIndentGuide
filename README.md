@@ -1,8 +1,9 @@
 # Rainbow Indent Guide
 
-🌈Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases.🌈
+🌈 Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases. 🌈
 
-**[⬇ Download 1.1.0](https://github.com/SimonePlatania/RainbowIndentGuide/releases/tag/v1.1.0)**
+[![Download](https://img.shields.io/badge/Download-1.1.0-2C2255?style=for-the-badge)](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest)
+[![Eclipse Marketplace](https://img.shields.io/badge/Eclipse%20Marketplace-Install-2C2255?style=for-the-badge&logo=eclipseide&logoColor=white)](https://marketplace.eclipse.org/marketplace-client-intro?mpc_install=7554850)
 
 <img width="1536" height="1024" alt="Rainbow indent guides in the Eclipse Java editor" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />
 
@@ -34,9 +35,20 @@ reopening editors.
 
 ## Installation
 
+### Eclipse Marketplace
+
+<a href="https://marketplace.eclipse.org/marketplace-client-intro?mpc_install=7554850">
+  <img src="https://marketplace.eclipse.org/modules/custom/eclipsefdn/eclipsefdn_marketplace/images/btn-install.svg" alt="Drag to your running Eclipse workspace to install Rainbow Indent Guide" width="80">
+</a>
+
+Drag the button onto a running Eclipse window. Requires the Marketplace Client,
+which most Eclipse packages ship with.
+
 ### From the update site
 
     https://simoneplatania.github.io/RainbowIndentGuide/
+
+1. *Help > Install New Software...*
 
 1. *Help > Install New Software...*
 2. *Add...*, paste the address, give it any name

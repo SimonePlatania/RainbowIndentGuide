@@ -98,16 +98,25 @@ Bug reports welcome, especially from versions I haven't tested.
 
 ## Layout
 
-    alien.rainbow.indentguide/            plug-in
-    alien.rainbow.indentguide.feature/    feature
-    alien.rainbow.indentguide.updateSite/ generated p2 repository
-    docs/                                 the same repository, served by GitHub Pages
+    alien.rainbow.indentguide/         plug-in
+    alien.rainbow.indentguide.feature/ feature
+    docs/                              p2 repository, served by GitHub Pages
+    build.sh                           regenerates docs/ and the release zip
 
-`docs/` is what *Help > Install New Software...* reads over HTTP, so it has to
-be regenerated and committed together with `alien.rainbow.indentguide.updateSite/`
-whenever a release is cut. The `.nojekyll` file in it is load bearing: without
-it GitHub runs the content through Jekyll, which drops anything starting with an
-underscore.
+`docs/` is the only copy of the update site, and it is what
+*Help > Install New Software...* reads over HTTP. Two things in it are load
+bearing and easy to lose: `.nojekyll`, without which GitHub runs the directory
+through Jekyll and drops anything starting with an underscore, and `site.xml`,
+which the publisher reads to decide what goes in the category.
+
+To cut a release, bump `Bundle-Version` in the plug-in manifest and `version`
+in `feature.xml` to match, then:
+
+    ./build.sh /path/to/eclipse
+
+It compiles with `--release 8`, rebuilds both jars, rewrites the version in
+`site.xml`, republishes the p2 metadata and repacks the archive. It refuses to
+run if the two versions disagree.
 
 ## History
 

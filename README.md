@@ -96,6 +96,30 @@ Verified to work with *Show only selected element* and *Clone Editor*.
 
 Bug reports welcome, especially from versions I haven't tested.
 
+## Troubleshooting
+
+**No guides in a file.** Guides are drawn per content type, and matching is on
+exact equality, so a file only gets them if it is opened with the editor
+registered for its type. A `.jsp` on an Eclipse without WTP has no JSP content
+type and opens in the plain text editor, which is not the same thing as a JSP
+editor. *Right-click → Open With* shows which one is in use. Enabling **Text**
+in the preferences covers anything that falls back to the generic editor, at
+the cost of drawing guides in files where they are of little use.
+
+**No guides anywhere.** Check *Help > About > Installation Details > Plug-ins*
+and look for `alien.rainbow.indentguide`. If it is listed as `INSTALLED`
+rather than `ACTIVE`, the bundle was found but could not be resolved; if it is
+not listed at all, it never got picked up — start Eclipse once with
+`-clean`.
+
+**Guides in the wrong place, or drawn twice.** Another Indent Guide plug-in is
+probably still installed. Since 1.1.0 p2 refuses the install, but an older
+copy dropped into `dropins/` bypasses p2 entirely and will keep painting.
+
+**Preference changes don't show up.** They apply immediately to open editors.
+If nothing changes, the preference store is likely a different one — check you
+are not looking at a second workspace.
+
 ## Layout
 
     alien.rainbow.indentguide/         plug-in
@@ -127,6 +151,7 @@ re-uploaded by [kiritsuku](https://github.com/kiritsuku/IndentGuide) when the
 original repository disappeared. This fork starts from there.
 [Gerald Rosenberg](https://github.com/grosenberg/IndentGuide) also maintains an
 active fork of the same plug-in.
+
 
 ## License
 

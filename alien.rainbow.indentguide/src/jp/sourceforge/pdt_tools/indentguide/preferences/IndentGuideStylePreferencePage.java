@@ -45,8 +45,10 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 		implements IWorkbenchPreferencePage {
 
 	private BooleanFieldEditor rainbowEnabled;
+	private BooleanFieldEditor braceColorEnabled;
 	private BooleanFieldEditor activeEnabled;
 	private BooleanFieldEditor irregularEnabled;
+	private IntegerFieldEditor irregularFlash;
 
 	private final ColorFieldEditor[] rainbowColors =
 			new ColorFieldEditor[IndentGuideStyle.RAINBOW_COLOR_COUNT];
@@ -83,6 +85,11 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 			addField(rainbowColors[i]);
 		}
 
+		braceColorEnabled = new BooleanFieldEditor(
+				IndentGuideStyle.BRACE_COLOR_ENABLED,
+				"Color the braces of a block like its guide", parent);
+		addField(braceColorEnabled);
+
 		activeEnabled = new BooleanFieldEditor(IndentGuideStyle.ACTIVE_ENABLED,
 				"Highlight the guide of the block holding the caret", parent);
 		addField(activeEnabled);
@@ -108,6 +115,11 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 				parent);
 		irregularAlpha.setValidRange(0, 255);
 		addField(irregularAlpha);
+		irregularFlash = new IntegerFieldEditor(
+				IndentGuideStyle.IRREGULAR_FLASH,
+				"    Flash on appearance (ms, 0 = off):", parent);
+		irregularFlash.setValidRange(0, 10000);
+		addField(irregularFlash);
 	}
 
 	/**
@@ -190,6 +202,10 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 				IndentGuideStyle.DEFAULT_IRREGULAR_COLOR);
 		store.setValue(IndentGuideStyle.IRREGULAR_ALPHA,
 				IndentGuideStyle.DEFAULT_IRREGULAR_ALPHA);
+		store.setValue(IndentGuideStyle.IRREGULAR_FLASH,
+				IndentGuideStyle.DEFAULT_IRREGULAR_FLASH);
+		store.setValue(IndentGuideStyle.BRACE_COLOR_ENABLED,
+				IndentGuideStyle.DEFAULT_BRACE_COLOR_ENABLED);
 		applyRainbow();
 	}
 
@@ -201,9 +217,11 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 		activeEnabled.load();
 		activeAlpha.load();
 		activeLighten.load();
+		braceColorEnabled.load();
 		irregularEnabled.load();
 		irregularColor.load();
 		irregularAlpha.load();
+		irregularFlash.load();
 		updateEnablement();
 	}
 
@@ -238,5 +256,6 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 		boolean irregular = irregularEnabled.getBooleanValue();
 		irregularColor.setEnabled(irregular, parent);
 		irregularAlpha.setEnabled(irregular, parent);
+		irregularFlash.setEnabled(irregular, parent);
 	}
 }

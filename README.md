@@ -34,7 +34,22 @@ reopening editors.
 
 ## Installation
 
-Download `RainbowIndentGuide-1.1.0-updatesite.zip` from the
+### From the update site
+
+    https://simoneplatania.github.io/RainbowIndentGuide/
+
+1. *Help > Install New Software...*
+2. *Add...*, paste the address, give it any name
+3. tick **Rainbow Indent Guide**, then Next, accept the license, Finish
+4. restart when prompted
+
+Eclipse remembers the site and offers later versions under *Help > Check for
+Updates*.
+
+### From the archive
+
+For an installation with no network access. Download
+`RainbowIndentGuide-1.1.0-updatesite.zip` from the
 [latest release](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest).
 Don't unzip it.
 
@@ -86,6 +101,13 @@ Bug reports welcome, especially from versions I haven't tested.
     alien.rainbow.indentguide/            plug-in
     alien.rainbow.indentguide.feature/    feature
     alien.rainbow.indentguide.updateSite/ generated p2 repository
+    docs/                                 the same repository, served by GitHub Pages
+
+`docs/` is what *Help > Install New Software...* reads over HTTP, so it has to
+be regenerated and committed together with `alien.rainbow.indentguide.updateSite/`
+whenever a release is cut. The `.nojekyll` file in it is load bearing: without
+it GitHub runs the content through Jekyll, which drops anything starting with an
+underscore.
 
 ## History
 

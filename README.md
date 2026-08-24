@@ -2,21 +2,27 @@
 
 🌈Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases.🌈
 
-**[⬇ Download 1.0.0](https://github.com/SimonePlatania/RainbowIndentGuide/releases/tag/v1.0.0)**
+**[⬇ Download 1.1.0](https://github.com/SimonePlatania/RainbowIndentGuide/releases/tag/v1.1.0)**
 
 <img width="1536" height="1024" alt="Rainbow indent guides in the Eclipse Java editor" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />
 
 ## Features
 
 - one color per indentation level (rainbow), cycled past the seventh
+- the braces of a block are repainted in the color of its guide, so the two
+  read as one shape
 - the guide of the block holding the caret is lightened, and follows the caret
+- hover a guide to light it up, click it to pin it there; a click away from any
+  guide releases it and hands the highlight back to the caret
 - guides follow the brace structure: they start below the line opening the
   block and reach the brace closing it
 - blank lines and comments no longer break the vertical lines
+- each guide is stroked in one piece over the lines it spans, so thin or barely
+  opaque lines stay clean instead of breaking up into dots
 - sub-pixel guide placement, so the lines do not drift right on deep levels
   when DPI scaling is on
 - optional greying of the single guide that does not line up with the brace
-  opening or closing its block
+  opening or closing its block, with a brief opacity flash when it appears
 - the common content types (Java, XML, properties, JSP, HTML, CSS, JS, PHP,
   C/C++) are enabled out of the box
 
@@ -27,7 +33,7 @@ reopening editors.
 
 ## Installation
 
-Download `RainbowIndentGuide-1.0.0-updatesite.zip` from the
+Download `RainbowIndentGuide-1.1.0-updatesite.zip` from the
 [latest release](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest).
 Don't unzip it.
 
@@ -45,7 +51,7 @@ To uninstall: *Help > About > Installation Details*, select it, Uninstall.
 <summary><b>Fallback: dropins</b> (older Eclipse, locked-down installations, no network)</summary>
 
 1. close Eclipse
-2. copy `alien.rainbow.indentguide_1.0.0.jar` into the `dropins/` folder of
+2. copy `alien.rainbow.indentguide_1.1.0.jar` into the `dropins/` folder of
    your Eclipse installation — the jar as-is, don't unpack it
 3. start Eclipse once with `eclipse -clean`, otherwise the bundle cache hides
    the new file
@@ -55,9 +61,13 @@ Installed this way, the plug-in won't appear in Installation Details and has
 to be removed by deleting the jar.
 </details>
 
-**Upgrading from the original plug-in?** Remove
-`jp.sourceforge.pdt_tools.indentGuide` first — the symbolic name differs, so
-both would draw guides at the same time. Preferences are not carried over.
+**Upgrading from another Indent Guide?** Remove it first. This fork still
+contributes the extension ids of the original, so two of them installed side by
+side give duplicate preference pages and two painters drawing over each other.
+Since 1.1.0 p2 refuses the install rather than let that happen: the feature
+declares `jp.sourceforge.pdt_tools.indentGuide` and Certiv Analytics'
+`net.certiv.tools.indentguide` as conflicting, both as features and as bare
+bundles. Preferences are not carried over.
 
 ## Requirements
 

@@ -1,0 +1,39 @@
+# p2 metadata advice for the Rainbow Indent Guide feature.
+#
+# Rainbow Indent Guide is a fork of Indent Guide and still contributes the same
+# extension ids (jp.sourceforge.pdt_tools.indentguide.preferences.*) and the same
+# text-editor painter. Installing it next to another Indent Guide derivative gives
+# duplicate preference pages and two painters drawing over each other, so the
+# conflicting installable units are declared as negative requirements
+# (min = 0, max = 0). p2 then refuses the install and explains the conflict
+# instead of producing a broken workbench.
+
+# --- Indent Guide, Certiv Analytics (net.certiv.tools.indentguide) -------------
+requires.0.namespace = org.eclipse.equinox.p2.iu
+requires.0.name = net.certiv.tools.indentguide.feature.feature.group
+requires.0.range = 0.0.0
+requires.0.greedy = false
+requires.0.min = 0
+requires.0.max = 0
+
+requires.1.namespace = org.eclipse.equinox.p2.iu
+requires.1.name = net.certiv.tools.indentguide
+requires.1.range = 0.0.0
+requires.1.greedy = false
+requires.1.min = 0
+requires.1.max = 0
+
+# --- Indent Guide, pdt_tools / sschaef (jp.sourceforge.pdt_tools.indentGuide) --
+requires.2.namespace = org.eclipse.equinox.p2.iu
+requires.2.name = jp.sourceforge.pdt_tools.indentGuide.feature.feature.group
+requires.2.range = 0.0.0
+requires.2.greedy = false
+requires.2.min = 0
+requires.2.max = 0
+
+requires.3.namespace = org.eclipse.equinox.p2.iu
+requires.3.name = jp.sourceforge.pdt_tools.indentGuide
+requires.3.range = 0.0.0
+requires.3.greedy = false
+requires.3.min = 0
+requires.3.max = 0

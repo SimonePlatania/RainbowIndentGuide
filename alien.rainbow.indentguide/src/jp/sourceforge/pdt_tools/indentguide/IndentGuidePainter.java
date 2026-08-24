@@ -679,7 +679,6 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		calculator.refresh();
 
 		long now = System.currentTimeMillis();
-		boolean[] irregularNow = new boolean[MAX_LEVELS];
 		long lastFlashEnd = 0;
 
 		StyledTextContent content = fTextWidget.getContent();
@@ -708,11 +707,14 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			int slot = levelOf(col, tabs);
 			int idx = palette != null && palette.length > 0
 					? (col / tabs) % palette.length : -1;
+			boolean drawn = false;
+			boolean irregular = false;
 			for (int k = 0; k < visibleCount; k++) {
 				colors[k] = null;
 				if (!drawable[k] || col >= indents[k]) {
 					continue;
 				}
+				drawn = true;
 				int line = startLine + k;
 				// The preview under the pointer is lit exactly like the pinned
 				// one, so that a click is visibly a no-op.
@@ -720,20 +722,12 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 						|| (hoverColumn == col && line >= hoverStart && line <= hoverEnd);
 				boolean grey = settings.isIrregularEnabled()
 						&& calculator.blockMismatch(col, line);
-				boolean flashing = false;
 				if (grey) {
-					irregularNow[slot] = true;
-					long end = flashDeadline(slot, now);
-					if (end > now) {
-						flashing = true;
-						if (end > lastFlashEnd) {
-							lastFlashEnd = end;
-						}
-					}
+					irregular = true;
 				}
 				if (grey && irregularColor != null) {
 					colors[k] = irregularColor;
-					alphas[k] = flashing ? 255 : settings.getIrregularAlpha();
+					alphas[k] = settings.getIrregularAlpha();
 				} else if (idx >= 0) {
 					colors[k] = lit && paletteBright != null ? paletteBright[idx]
 							: palette[idx];
@@ -741,9 +735,19 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 							: settings.getLineAlpha();
 				}
 			}
+			// The state of a column is only carried forward while it is on
+			// screen; scrolling past a level must not read as it being fixed.
+			if (drawn) {
+				long end = notchFlash(slot, irregular, now);
+				if (end > now) {
+					if (end > lastFlashEnd) {
+						lastFlashEnd = end;
+					}
+					whiten(colors, alphas);
+				}
+			}
 			drawColumnRuns(gc, colors, alphas, startLine, col);
 		}
-		forgetVanishedIrregulars(irregularNow);
 		ensureFlashTimer(lastFlashEnd, now);
 		if (settings.isBraceColorEnabled()) {
 			drawBraces(gc, startLine, endLine, tabs, content);
@@ -756,27 +760,47 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	}
 
 	/**
-	 * Opens the opacity burst of a level the first time it is drawn grey, and
-	 * reports when that burst ends. The flash is meant to catch the eye once,
-	 * when the inconsistency appears, and then let the guide settle back to its
-	 * muted grey.
+	 * Tracks whether a level is drawn grey, and opens a white flash on the pass
+	 * where it stops being so. Fixing the indentation is the moment worth
+	 * acknowledging: the guide comes back to its color, and the blink says so.
 	 *
 	 * @param slot
 	 *            the indentation level of the guide, already clamped
+	 * @param irregular
+	 *            whether the level is drawn grey by the current pass
 	 * @param now
 	 *            the instant of the current drawing pass
-	 * @return the instant the burst of that level ends, 0 if it is not bursting
+	 * @return the instant the flash of that level ends, 0 if it is not flashing
 	 */
-	private long flashDeadline(int slot, long now) {
+	private long notchFlash(int slot, boolean irregular, long now) {
+		boolean fixed = irregularKnown[slot] && !irregular;
+		irregularKnown[slot] = irregular;
 		int duration = settings.getIrregularFlash();
 		if (duration <= 0) {
 			return 0;
 		}
-		if (!irregularKnown[slot]) {
-			irregularKnown[slot] = true;
+		if (fixed) {
 			flashEnd[slot] = now + duration;
 		}
 		return flashEnd[slot];
+	}
+
+	/**
+	 * Turns the guides of one column white for the length of the flash.
+	 *
+	 * @param colors
+	 *            per visible line, the color of the guide
+	 * @param alphas
+	 *            per visible line, the opacity of the guide
+	 */
+	private void whiten(Color[] colors, int[] alphas) {
+		Color white = fTextWidget.getDisplay().getSystemColor(SWT.COLOR_WHITE);
+		for (int k = 0; k < colors.length; k++) {
+			if (colors[k] != null) {
+				colors[k] = white;
+				alphas[k] = 255;
+			}
+		}
 	}
 
 	/**
@@ -811,21 +835,6 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	}
 
 	/**
-	 * Levels that are no longer irregular become eligible to flash again, so
-	 * that fixing the indentation and breaking it anew is signalled twice.
-	 *
-	 * @param irregularNow
-	 *            the levels drawn grey by the pass that just ended
-	 */
-	private void forgetVanishedIrregulars(boolean[] irregularNow) {
-		for (int i = 0; i < MAX_LEVELS; i++) {
-			if (!irregularNow[i]) {
-				irregularKnown[i] = false;
-			}
-		}
-	}
-
-	/**
 	 * Repaints the braces delimiting a block in the color of the last guide
 	 * drawn on their line, so that the vertical line and the two braces it runs
 	 * between read as one shape.
@@ -857,19 +866,24 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			gc.setAlpha(255);
 		}
 		Point selection = fTextWidget.getSelectionRange();
+		int leftmost = settings.isDrawLeftEnd() ? 0 : tabs;
 		for (int line = startLine; line <= endLine; line++) {
 			int widgetOffset = fTextWidget.getOffsetAtLine(line);
 			if (isFoldedLine(content.getLineAtOffset(widgetOffset))) {
 				continue;
 			}
-			// The braces belong to the level of their own line, that is, to the
-			// innermost guide drawn on it.
-			int level = calculator.effectiveIndent(line) / tabs - 1;
-			if (level < 0) {
+			// The braces take the color of the guide that runs between them,
+			// the one drawn through the body of the block they delimit. That
+			// guide sits at the column their own line is indented to, one level
+			// deeper than the innermost guide drawn on that line.
+			int column = calculator.effectiveIndent(line);
+			if (column < leftmost) {
+				// Nothing is drawn that far left, so there is no color to
+				// match: leave the braces to the editor.
 				continue;
 			}
 			String text = fTextWidget.getLine(line);
-			gc.setForeground(palette[level % palette.length]);
+			gc.setForeground(palette[(column / tabs) % palette.length]);
 			Color lineBackground = fTextWidget.getLineBackground(line);
 			gc.setBackground(lineBackground != null ? lineBackground
 					: fTextWidget.getBackground());

@@ -213,7 +213,7 @@ public class IndentGuideSettings {
 	}
 
 	/**
-	 * @return how long a guide turning grey stays opaque, in milliseconds; 0
+	 * @return how long a guide blinks white once fixed, in milliseconds; 0
 	 *         disables the flash
 	 */
 	public int getIrregularFlash() {

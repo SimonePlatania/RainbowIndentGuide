@@ -22,7 +22,8 @@
 - sub-pixel guide placement, so the lines do not drift right on deep levels
   when DPI scaling is on
 - optional greying of the single guide that does not line up with the brace
-  opening or closing its block, with a brief opacity flash when it appears
+  opening or closing its block; when the indentation is fixed the guide blinks
+  white for a moment as it takes its color back
 - the common content types (Java, XML, properties, JSP, HTML, CSS, JS, PHP,
   C/C++) are enabled out of the box
 

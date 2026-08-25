@@ -13,23 +13,23 @@
 
 <table>
   <tr>
-    <td width="50%">
-      <img src="https://github.com/user-attachments/assets/60f5c342-f47d-403d-aa09-079a44af6086" alt="Deeply nested code with rainbow guides" />
-    <sub><b>Active block</b> — the guide holding the caret keeps its colour and lights up.</sub>
+        <td width="50%">
+      <img src="https://github.com/user-attachments/assets/46e90030-c733-4b36-938c-a9be34c7c702" alt="Active guide lit up" />
+            <sub><b>Deep nesting</b> — one colour per level, so eight levels stay readable.</sub>
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/46e90030-c733-4b36-938c-a9be34c7c702" alt="Active guide lit up" />
-      <sub><b>Deep nesting</b> — one colour per level, so eight levels stay readable.</sub>
+      <img src="https://github.com/user-attachments/assets/60f5c342-f47d-403d-aa09-079a44af6086" alt="Deeply nested code with rainbow guides" />
+            <sub><b>Active block</b> — the guide holding the caret keeps its colour and lights up.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/02ee53b3-7b57-4d5d-a77d-8e9b52141c1d" alt="Guide blinking as indentation is fixed" />
-      <sub><b>Restore blink</b> — a greyed guide flashes as it takes its colour back.</sub>
+      <img src="https://github.com/user-attachments/assets/480c72a1-411f-425e-9200-2bc55afbd476" alt="Nested call with rainbow parentheses" />
+      <sub><b>Rainbow parentheses</b> — nine levels of nested calls, each bracket matched to its guide.</sub>
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/81ca7d55-44cb-4b06-9f62-68e0297d9005" alt="Style preference page" />
-      <sub><b>Preferences</b> — every colour, opacity and toggle is configurable.</sub>
+      <img src="https://github.com/user-attachments/assets/02ee53b3-7b57-4d5d-a77d-8e9b52141c1d" alt="Guide blinking as indentation is fixed" />
+      <sub><b>Restore blink</b> — a greyed guide flashes as it takes its colour back.</sub>
     </td>
   </tr>
 </table>

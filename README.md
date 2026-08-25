@@ -10,26 +10,30 @@
 ## Screenshots
 
 <img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
+
 <table>
   <tr>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/e864e83c-bf64-4700-952c-92c12953a23b" alt="Rainbow guides across nesting levels" />
+      <img src="https://github.com/user-attachments/assets/60f5c342-f47d-403d-aa09-079a44af6086" alt="Deeply nested code with rainbow guides" />
+    <sub><b>Active block</b> — the guide holding the caret keeps its colour and lights up.</sub>
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/8a005e7e-5231-4446-9c72-6bfa4ef42c0b" alt="Braces coloured to match their guide" />
+      <img src="https://github.com/user-attachments/assets/46e90030-c733-4b36-938c-a9be34c7c702" alt="Active guide lit up" />
+      <sub><b>Deep nesting</b> — one colour per level, so eight levels stay readable.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/09d04506-54e6-44f4-8cfb-2b445ba58425" alt="Active block highlighted" />
+      <img src="https://github.com/user-attachments/assets/02ee53b3-7b57-4d5d-a77d-8e9b52141c1d" alt="Guide blinking as indentation is fixed" />
+      <sub><b>Restore blink</b> — a greyed guide flashes as it takes its colour back.</sub>
     </td>
-    <td colspan="2">
-      <img src="https://github.com/user-attachments/assets/c020f407-893b-4138-ba9d-2970a7c0227d" alt="Preference page" />
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/81ca7d55-44cb-4b06-9f62-68e0297d9005" alt="Style preference page" />
+      <sub><b>Preferences</b> — every colour, opacity and toggle is configurable.</sub>
     </td>
-  </tr>
-  <tr>
   </tr>
 </table>
+
 <img src="https://github.com/user-attachments/assets/cd55803e-d63f-4815-85f7-6e427205c902" width="100%" alt="" />
 
 ## Features

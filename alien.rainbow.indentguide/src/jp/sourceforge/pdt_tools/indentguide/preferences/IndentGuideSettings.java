@@ -38,10 +38,15 @@ public class IndentGuideSettings {
 	private RGB[] palette = new RGB[] { FALLBACK };
 
 	private boolean activeEnabled;
+	private boolean caretHighlightEnabled =
+			IndentGuideStyle.DEFAULT_CARET_HIGHLIGHT_ENABLED;
 	private int activeAlpha = IndentGuideStyle.DEFAULT_ACTIVE_ALPHA;
 	private int activeLighten = IndentGuideStyle.DEFAULT_ACTIVE_LIGHTEN;
 
 	private boolean braceColorEnabled = IndentGuideStyle.DEFAULT_BRACE_COLOR_ENABLED;
+	private boolean parenthesisColorEnabled =
+			IndentGuideStyle.DEFAULT_PARENTHESIS_COLOR_ENABLED;
+	private RGB[] parenthesisPalette = new RGB[] { FALLBACK };
 
 	private boolean irregularEnabled;
 	private RGB irregularColor = parse(IndentGuideStyle.DEFAULT_IRREGULAR_COLOR,
@@ -66,9 +71,13 @@ public class IndentGuideSettings {
 
 		rainbowEnabled = store.getBoolean(IndentGuideStyle.RAINBOW_ENABLED);
 		activeEnabled = store.getBoolean(IndentGuideStyle.ACTIVE_ENABLED);
+		caretHighlightEnabled = store
+				.getBoolean(IndentGuideStyle.CARET_HIGHLIGHT_ENABLED);
 		irregularEnabled = store.getBoolean(IndentGuideStyle.IRREGULAR_ENABLED);
 		braceColorEnabled = store
 				.getBoolean(IndentGuideStyle.BRACE_COLOR_ENABLED);
+		parenthesisColorEnabled = store
+				.getBoolean(IndentGuideStyle.PARENTHESIS_COLOR_ENABLED);
 		activeLighten = store.getInt(IndentGuideStyle.ACTIVE_LIGHTEN);
 
 		activeAlpha = IndentGuideStyle.DEFAULT_ACTIVE_ALPHA;
@@ -94,6 +103,17 @@ public class IndentGuideSettings {
 		}
 
 		palette = readPalette(store);
+		parenthesisPalette = readParenthesisPalette(store);
+	}
+
+	private RGB[] readParenthesisPalette(IPreferenceStore store) {
+		RGB[] colors = new RGB[IndentGuideStyle.PARENTHESIS_COLOR_COUNT];
+		for (int i = 0; i < colors.length; i++) {
+			colors[i] = parse(readString(store,
+					IndentGuideStyle.parenthesisKey(i),
+					IndentGuideStyle.DEFAULT_RAINBOW[i]), FALLBACK);
+		}
+		return colors;
 	}
 
 	private RGB[] readPalette(IPreferenceStore store) {
@@ -150,7 +170,15 @@ public class IndentGuideSettings {
 	}
 
 	/**
-	 * The given color lightened by the configured percentage.
+	 * The given color brought forward by the configured percentage: the same
+	 * hue, brighter and a little deeper.
+	 * <p>
+	 * Pushing each channel towards 255 is what a lightening usually is, but it
+	 * is also a walk towards white: it raises the brightness by taking the
+	 * color out, and a lit yellow guide comes out whitish rather than yellower.
+	 * Working in hue, saturation and brightness lets the brightness rise while
+	 * the saturation rises with it, so the guide turns up the color it already
+	 * had.
 	 *
 	 * @param rgb
 	 *            the color of a level
@@ -159,13 +187,21 @@ public class IndentGuideSettings {
 	public RGB lighten(RGB rgb) {
 		int pct = (activeLighten < 0 || activeLighten > 100)
 				? IndentGuideStyle.DEFAULT_ACTIVE_LIGHTEN : activeLighten;
-		return new RGB(lighten(rgb.red, pct), lighten(rgb.green, pct),
-				lighten(rgb.blue, pct));
+		float amount = pct / 100f;
+		float[] hsb = rgb.getHSB();
+		float saturation = hsb[1] + (1 - hsb[1]) * amount * SATURATION_SHARE;
+		float brightness = hsb[2] + (1 - hsb[2]) * amount;
+		return new RGB(hsb[0], clamp(saturation), clamp(brightness));
 	}
 
-	private static int lighten(int value, int pct) {
-		int out = value + (int) ((255 - value) * (pct / 100.0));
-		return out > 255 ? 255 : out;
+	/** How much of the lightening goes into the saturation. */
+	private static final float SATURATION_SHARE = 0.4f;
+
+	private static float clamp(float value) {
+		if (value < 0) {
+			return 0;
+		}
+		return value > 1 ? 1 : value;
 	}
 
 	public int getLineAlpha() {
@@ -196,6 +232,10 @@ public class IndentGuideSettings {
 		return activeEnabled;
 	}
 
+	public boolean isCaretHighlightEnabled() {
+		return caretHighlightEnabled;
+	}
+
 	public int getActiveAlpha() {
 		return activeAlpha;
 	}
@@ -222,5 +262,13 @@ public class IndentGuideSettings {
 
 	public boolean isBraceColorEnabled() {
 		return braceColorEnabled;
+	}
+
+	public boolean isParenthesisColorEnabled() {
+		return parenthesisColorEnabled;
+	}
+
+	public RGB[] getParenthesisPalette() {
+		return parenthesisPalette;
 	}
 }

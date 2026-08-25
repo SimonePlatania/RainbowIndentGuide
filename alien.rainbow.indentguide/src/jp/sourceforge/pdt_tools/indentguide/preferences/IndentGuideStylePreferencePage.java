@@ -46,12 +46,16 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 
 	private BooleanFieldEditor rainbowEnabled;
 	private BooleanFieldEditor braceColorEnabled;
+	private BooleanFieldEditor parenthesisColorEnabled;
 	private BooleanFieldEditor activeEnabled;
+	private BooleanFieldEditor caretHighlightEnabled;
 	private BooleanFieldEditor irregularEnabled;
 	private IntegerFieldEditor irregularFlash;
 
 	private final ColorFieldEditor[] rainbowColors =
 			new ColorFieldEditor[IndentGuideStyle.RAINBOW_COLOR_COUNT];
+	private final ColorFieldEditor[] parenthesisColors =
+			new ColorFieldEditor[IndentGuideStyle.PARENTHESIS_COLOR_COUNT];
 	private IntegerFieldEditor activeAlpha;
 	private IntegerFieldEditor activeLighten;
 	private ColorFieldEditor irregularColor;
@@ -90,9 +94,24 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 				"Color the braces of a block like its guide", parent);
 		addField(braceColorEnabled);
 
+		parenthesisColorEnabled = new BooleanFieldEditor(
+				IndentGuideStyle.PARENTHESIS_COLOR_ENABLED,
+				"Color matching round parentheses", parent);
+		addField(parenthesisColorEnabled);
+		for (int i = 0; i < parenthesisColors.length; i++) {
+			parenthesisColors[i] = new ColorFieldEditor(
+					IndentGuideStyle.parenthesisKey(i),
+					"    Parenthesis level " + (i + 1) + ":", parent);
+			addField(parenthesisColors[i]);
+		}
+
 		activeEnabled = new BooleanFieldEditor(IndentGuideStyle.ACTIVE_ENABLED,
-				"Highlight the guide of the block holding the caret", parent);
+				"Highlight guides when clicked", parent);
 		addField(activeEnabled);
+		caretHighlightEnabled = new BooleanFieldEditor(
+				IndentGuideStyle.CARET_HIGHLIGHT_ENABLED,
+				"    Follow the caret when no guide is pinned", parent);
+		addField(caretHighlightEnabled);
 		activeLighten = new IntegerFieldEditor(IndentGuideStyle.ACTIVE_LIGHTEN,
 				"    Lighten (0-100%):", parent);
 		activeLighten.setValidRange(0, 100);
@@ -193,6 +212,8 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 		store.setValue(PreferenceConstants.LINE_COLOR,
 				IndentGuideStyle.DEFAULT_LINE_COLOR);
 		store.setValue(IndentGuideStyle.ACTIVE_ENABLED, true);
+		store.setValue(IndentGuideStyle.CARET_HIGHLIGHT_ENABLED,
+				IndentGuideStyle.DEFAULT_CARET_HIGHLIGHT_ENABLED);
 		store.setValue(IndentGuideStyle.ACTIVE_ALPHA,
 				IndentGuideStyle.DEFAULT_ACTIVE_ALPHA);
 		store.setValue(IndentGuideStyle.ACTIVE_LIGHTEN,
@@ -206,6 +227,12 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 				IndentGuideStyle.DEFAULT_IRREGULAR_FLASH);
 		store.setValue(IndentGuideStyle.BRACE_COLOR_ENABLED,
 				IndentGuideStyle.DEFAULT_BRACE_COLOR_ENABLED);
+		store.setValue(IndentGuideStyle.PARENTHESIS_COLOR_ENABLED,
+				IndentGuideStyle.DEFAULT_PARENTHESIS_COLOR_ENABLED);
+		for (int i = 0; i < IndentGuideStyle.PARENTHESIS_COLOR_COUNT; i++) {
+			store.setValue(IndentGuideStyle.parenthesisKey(i),
+					IndentGuideStyle.DEFAULT_RAINBOW[i]);
+		}
 		applyRainbow();
 	}
 
@@ -215,9 +242,14 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 			rainbowColors[i].load();
 		}
 		activeEnabled.load();
+		caretHighlightEnabled.load();
 		activeAlpha.load();
 		activeLighten.load();
 		braceColorEnabled.load();
+		parenthesisColorEnabled.load();
+		for (int i = 0; i < parenthesisColors.length; i++) {
+			parenthesisColors[i].load();
+		}
 		irregularEnabled.load();
 		irregularColor.load();
 		irregularAlpha.load();
@@ -251,8 +283,13 @@ public class IndentGuideStylePreferencePage extends FieldEditorPreferencePage
 			rainbowColors[i].setEnabled(rainbow, parent);
 		}
 		boolean active = activeEnabled.getBooleanValue();
+		caretHighlightEnabled.setEnabled(active, parent);
 		activeLighten.setEnabled(active, parent);
 		activeAlpha.setEnabled(active, parent);
+		boolean parentheses = parenthesisColorEnabled.getBooleanValue();
+		for (int i = 0; i < parenthesisColors.length; i++) {
+			parenthesisColors[i].setEnabled(parentheses, parent);
+		}
 		boolean irregular = irregularEnabled.getBooleanValue();
 		irregularColor.setEnabled(irregular, parent);
 		irregularAlpha.setEnabled(irregular, parent);

@@ -30,8 +30,15 @@ public final class IndentGuideStyle {
 	public static final String RAINBOW_COLOR_PREFIX = "rainbow_color_"; //$NON-NLS-1$
 	public static final int RAINBOW_COLOR_COUNT = 7;
 
+	/** Color matching round parentheses with a separate seven-color palette. */
+	public static final String PARENTHESIS_COLOR_ENABLED = "parenthesis_color_enabled"; //$NON-NLS-1$
+	public static final String PARENTHESIS_COLOR_PREFIX = "parenthesis_color_"; //$NON-NLS-1$
+	public static final int PARENTHESIS_COLOR_COUNT = 7;
+
 	/** Lighten the guide of the block the caret sits in. */
 	public static final String ACTIVE_ENABLED = "active_enabled"; //$NON-NLS-1$
+	/** Follow the caret when no guide has been pinned with a click. */
+	public static final String CARET_HIGHLIGHT_ENABLED = "caret_highlight_enabled"; //$NON-NLS-1$
 	/** Opacity of the active guide, 0 to 255. */
 	public static final String ACTIVE_ALPHA = "active_alpha"; //$NON-NLS-1$
 	/** How much the active guide is lightened, 0 to 100 percent. */
@@ -58,15 +65,21 @@ public final class IndentGuideStyle {
 	public static final String DEFAULT_IRREGULAR_COLOR = "110,110,118"; //$NON-NLS-1$
 	public static final int DEFAULT_ACTIVE_ALPHA = 255;
 	public static final int DEFAULT_ACTIVE_LIGHTEN = 55;
+	public static final boolean DEFAULT_CARET_HIGHLIGHT_ENABLED = false;
 	public static final int DEFAULT_IRREGULAR_ALPHA = 70;
-	public static final int DEFAULT_IRREGULAR_FLASH = 450;
+	public static final int DEFAULT_IRREGULAR_FLASH = 650;
 	public static final boolean DEFAULT_BRACE_COLOR_ENABLED = true;
+	public static final boolean DEFAULT_PARENTHESIS_COLOR_ENABLED = true;
 
 	private IndentGuideStyle() {
 	}
 
 	public static String rainbowKey(int index) {
 		return RAINBOW_COLOR_PREFIX + (index + 1);
+	}
+
+	public static String parenthesisKey(int index) {
+		return PARENTHESIS_COLOR_PREFIX + (index + 1);
 	}
 
 	/**
@@ -85,7 +98,14 @@ public final class IndentGuideStyle {
 		for (int i = 0; i < RAINBOW_COLOR_COUNT; i++) {
 			store.setDefault(rainbowKey(i), DEFAULT_RAINBOW[i]);
 		}
+		store.setDefault(PARENTHESIS_COLOR_ENABLED,
+				DEFAULT_PARENTHESIS_COLOR_ENABLED);
+		for (int i = 0; i < PARENTHESIS_COLOR_COUNT; i++) {
+			store.setDefault(parenthesisKey(i), DEFAULT_RAINBOW[i]);
+		}
 		store.setDefault(ACTIVE_ENABLED, true);
+		store.setDefault(CARET_HIGHLIGHT_ENABLED,
+				DEFAULT_CARET_HIGHLIGHT_ENABLED);
 		store.setDefault(ACTIVE_ALPHA, DEFAULT_ACTIVE_ALPHA);
 		store.setDefault(ACTIVE_LIGHTEN, DEFAULT_ACTIVE_LIGHTEN);
 		store.setDefault(BRACE_COLOR_ENABLED, DEFAULT_BRACE_COLOR_ENABLED);

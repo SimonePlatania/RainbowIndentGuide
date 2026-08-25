@@ -34,9 +34,6 @@ import org.eclipse.swt.custom.StyledTextContent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -58,7 +55,7 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	/** The number of spaces measured at once to get a fractional column width. */
 	private static final int PROBE_WIDTH = 80;
 
-	/** How far from a guide, in pixels, the pointer still counts as over it. */
+	/** How far from a guide, in pixels, a click still counts as hitting it. */
 	private static final int HOVER_TOLERANCE = 4;
 
 	/** Mirrors the depth the level calculator memoizes. */
@@ -94,6 +91,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	/** The same tints, lightened, used for the guide of the active block. */
 	private Color[] paletteBright;
 	private Color irregularColor;
+	/** A separate palette whose index is the round-parenthesis nesting depth. */
+	private Color[] parenthesisPalette;
 
 	/** The guide of the block holding the caret: column and lines covered. */
 	private int activeColumn = -1;
@@ -101,8 +100,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	private int activeEnd = -1;
 
 	/**
-	 * The guide the pointer is over, lit as a preview of what a click would
-	 * pin. Same shape as the active guide, and never persisted.
+	 * Temporary result of the click hit test. It is cleared before repainting,
+	 * so merely moving the pointer never changes the guide appearance.
 	 */
 	private int hoverColumn = -1;
 	private int hoverStart = -1;
@@ -123,13 +122,13 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	 */
 	private final long[] flashEnd = new long[MAX_LEVELS];
 	private final boolean[] irregularKnown = new boolean[MAX_LEVELS];
+	/** Scroll position the irregular transition state belongs to. */
+	private int irregularTopIndex = -1;
 	/** The deadline the booked flash timer covers, 0 when none is booked. */
 	private long flashTimerFor;
 
 	private CaretListener caretListener;
-	private MouseMoveListener mouseMoveListener;
 	private MouseListener mouseListener;
-	private MouseTrackListener mouseTrackListener;
 
 	/**
 	 * Creates a new painter for the given text viewer.
@@ -183,6 +182,11 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			paletteBright[i] = new Color(display, settings.lighten(rgbs[i]));
 		}
 		irregularColor = new Color(display, settings.getIrregularColor());
+		RGB[] parentheses = settings.getParenthesisPalette();
+		parenthesisPalette = new Color[parentheses.length];
+		for (int i = 0; i < parentheses.length; i++) {
+			parenthesisPalette[i] = new Color(display, parentheses[i]);
+		}
 	}
 
 	private void disposeColors() {
@@ -192,6 +196,7 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		irregularColor = null;
 		paletteBright = dispose(paletteBright);
 		palette = dispose(palette);
+		parenthesisPalette = dispose(parenthesisPalette);
 	}
 
 	private static Color[] dispose(Color[] colors) {
@@ -274,29 +279,13 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	}
 
 	/**
-	 * The guides answer to the pointer as well as to the caret: moving over one
-	 * lights it up and turns the pointer into a hand, clicking it pins it.
-	 * Nothing here consumes the event, so the editor keeps placing the caret as
-	 * usual.
+	 * Clicking a guide pins its highlight. Nothing here consumes the event, so
+	 * the editor keeps its normal text cursor and places the caret as usual.
 	 */
 	private void installMouseListeners() {
-		if (mouseMoveListener != null || fTextWidget == null) {
+		if (mouseListener != null || fTextWidget == null) {
 			return;
 		}
-		mouseMoveListener = new MouseMoveListener() {
-
-			public void mouseMove(MouseEvent e) {
-				if (fTextWidget == null || fTextWidget.isDisposed()) {
-					return;
-				}
-				if (updateHover(e.x, e.y)) {
-					applyHoverCursor();
-					redrawAll();
-				}
-			}
-		};
-		fTextWidget.addMouseMoveListener(mouseMoveListener);
-
 		mouseListener = new MouseAdapter() {
 
 			public void mouseDown(MouseEvent e) {
@@ -311,58 +300,24 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 				} else {
 					clearPin();
 				}
+				hoverColumn = -1;
+				hoverStart = -1;
+				hoverEnd = -1;
 				updateActiveBlock();
 				redrawAll();
 			}
 		};
 		fTextWidget.addMouseListener(mouseListener);
-
-		mouseTrackListener = new MouseTrackAdapter() {
-
-			public void mouseExit(MouseEvent e) {
-				if (fTextWidget == null || fTextWidget.isDisposed()) {
-					return;
-				}
-				if (hoverColumn >= 0) {
-					hoverColumn = -1;
-					hoverStart = -1;
-					hoverEnd = -1;
-					applyHoverCursor();
-					redrawAll();
-				}
-			}
-		};
-		fTextWidget.addMouseTrackListener(mouseTrackListener);
 	}
 
 	private void removeMouseListeners() {
 		if (fTextWidget != null && !fTextWidget.isDisposed()) {
-			if (mouseMoveListener != null) {
-				fTextWidget.removeMouseMoveListener(mouseMoveListener);
-			}
 			if (mouseListener != null) {
 				fTextWidget.removeMouseListener(mouseListener);
 			}
-			if (mouseTrackListener != null) {
-				fTextWidget.removeMouseTrackListener(mouseTrackListener);
-			}
 			fTextWidget.setCursor(null);
 		}
-		mouseMoveListener = null;
 		mouseListener = null;
-		mouseTrackListener = null;
-	}
-
-	/**
-	 * A hand over a guide, the widget's own text pointer everywhere else.
-	 * System cursors are shared and must not be disposed.
-	 */
-	private void applyHoverCursor() {
-		if (fTextWidget == null || fTextWidget.isDisposed()) {
-			return;
-		}
-		fTextWidget.setCursor(hoverColumn >= 0 ? fTextWidget.getDisplay()
-				.getSystemCursor(SWT.CURSOR_HAND) : null);
 	}
 
 	private void clearPin() {
@@ -380,19 +335,19 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	}
 
 	/**
-	 * Locates the guide the pointer is over: the nearest one within
+	 * Locates the guide hit by a click: the nearest one within
 	 * {@link #HOVER_TOLERANCE} pixels on the line under the pointer.
 	 *
 	 * @param x
 	 *            pointer position in widget coordinates
 	 * @param y
 	 *            pointer position in widget coordinates
-	 * @return <code>true</code> if the hovered guide has changed
+	 * @return <code>true</code> if the hit-test result has changed
 	 */
 	private boolean updateHover(int x, int y) {
 		int col = -1, start = -1, end = -1;
 		// columnWidth is only known once the widget has been painted at least
-		// once; before that there is nothing on screen to hover anyway.
+		// once; before that there is nothing on screen to click anyway.
 		if (settings.isActiveEnabled() && columnWidth > 0) {
 			try {
 				int tabs = tabWidth();
@@ -402,7 +357,12 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 				int offset = fTextWidget.getOffsetAtLine(line);
 				int count = calculator.effectiveIndent(line);
 				int best = HOVER_TOLERANCE + 1;
+				int base = calculator.outermostParenthesisGuide(line);
 				for (int i = settings.isDrawLeftEnd() ? 0 : tabs; i < count; i += tabs) {
+					if (base >= 0 && i > base
+							&& !calculator.isParenthesisGuide(i, line)) {
+						continue;
+					}
 					int distance = Math.abs(x - guideX(offset, i));
 					if (distance < best) {
 						best = distance;
@@ -473,7 +433,7 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 				} else {
 					clearPin();
 				}
-				if (col < 0) {
+				if (col < 0 && settings.isCaretHighlightEnabled()) {
 					int caretOffset = fTextWidget.getCaretOffset();
 					int caretLine = fTextWidget.getLineAtOffset(caretOffset);
 					int count = calculator.effectiveIndent(caretLine);
@@ -490,6 +450,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 						if (col < 0) {
 							col = 0;
 						}
+						col = calculator.parenthesisGuideAtOrBefore(col,
+								caretLine);
 						line = caretLine;
 					}
 				}
@@ -548,6 +510,14 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		} else if (reason == CONFIGURATION || reason == INTERNAL) {
 			redrawAll();
 		} else if (reason == TEXT_CHANGE) {
+			if (settings.isIrregularEnabled()) {
+				// The keystroke that repairs an indentation is on one line, but
+				// the guide it repairs runs over the whole block, and that is
+				// what has to blink. Redrawing only the edited line would blink
+				// one line of it.
+				redrawAll();
+				return;
+			}
 			// redraw current line only
 			try {
 				IRegion lineRegion = document
@@ -677,6 +647,21 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		columnWidth = measureColumnWidth(gc);
 		calculator.setTabWidth(tabs);
 		calculator.refresh();
+		// Do not let an irregular block that has just been scrolled away make an
+		// unrelated block at the same depth flash as if it were repaired. What
+		// says a different block is now under a column is the widget having
+		// scrolled, not the range of this paint: recent releases repair only
+		// the damaged rectangle, so that range changes constantly while the
+		// text stands still, and keying the memory on it wiped, every single
+		// pass, the very state the flash is the difference between.
+		int top = fTextWidget.getTopIndex();
+		if (top != irregularTopIndex) {
+			for (int i = 0; i < MAX_LEVELS; i++) {
+				irregularKnown[i] = false;
+				flashEnd[i] = 0;
+			}
+			irregularTopIndex = top;
+		}
 
 		long now = System.currentTimeMillis();
 		long lastFlashEnd = 0;
@@ -711,16 +696,23 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			boolean irregular = false;
 			for (int k = 0; k < visibleCount; k++) {
 				colors[k] = null;
-				if (!drawable[k] || col >= indents[k]) {
+				int line = startLine + k;
+				boolean parenthesisGuide = calculator
+						.isParenthesisGuide(col, line);
+				// Inside a multi-line parenthesis only the columns right of the
+				// outermost one are alignment; the guides of the blocks
+				// enclosing it keep running, unbroken, through these lines.
+				int base = calculator.outermostParenthesisGuide(line);
+				boolean alignmentOnly = base >= 0 && col > base
+						&& !parenthesisGuide;
+				if (!drawable[k] || alignmentOnly
+						|| (!parenthesisGuide && col >= indents[k])) {
 					continue;
 				}
 				drawn = true;
-				int line = startLine + k;
-				// The preview under the pointer is lit exactly like the pinned
-				// one, so that a click is visibly a no-op.
-				boolean lit = (activeColumn == col && line >= activeStart && line <= activeEnd)
-						|| (hoverColumn == col && line >= hoverStart && line <= hoverEnd);
-				boolean grey = settings.isIrregularEnabled()
+				boolean lit = activeColumn == col && line >= activeStart
+						&& line <= activeEnd;
+				boolean grey = !parenthesisGuide && settings.isIrregularEnabled()
 						&& calculator.blockMismatch(col, line);
 				if (grey) {
 					irregular = true;
@@ -729,6 +721,9 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 					colors[k] = irregularColor;
 					alphas[k] = settings.getIrregularAlpha();
 				} else if (idx >= 0) {
+					// The lit guide keeps the colour of its own level and comes
+					// forward by being brighter and fully opaque, so that the
+					// highlight never costs the level its identity.
 					colors[k] = lit && paletteBright != null ? paletteBright[idx]
 							: palette[idx];
 					alphas[k] = lit ? settings.getActiveAlpha()
@@ -752,6 +747,157 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		if (settings.isBraceColorEnabled()) {
 			drawBraces(gc, startLine, endLine, tabs, content);
 		}
+		if (settings.isParenthesisColorEnabled()) {
+			drawParentheses(gc, startLine, endLine);
+		}
+	}
+
+	/**
+	 * Repaints matching round parentheses with a palette independent from the
+	 * guides and braces. The opening offset and its depth are kept on a stack;
+	 * consequently a closing parenthesis always receives the exact color of
+	 * the opening parenthesis it removes from that stack.
+	 * <p>
+	 * The whole model document is scanned, not just the viewport, so a pair
+	 * keeps its color while either end is scrolled or folded out of view.
+	 */
+	private void drawParentheses(GC gc, int startLine, int endLine) {
+		if (parenthesisPalette == null || parenthesisPalette.length == 0) {
+			return;
+		}
+		IDocument document = fTextViewer.getDocument();
+		if (document == null) {
+			return;
+		}
+		String text = document.get();
+		int tabs = tabWidth();
+		// The color of a parenthesis carries on from the depth its line is
+		// indented to, instead of restarting at the first tint: the innermost
+		// guide reaching that line and the parenthesis opening there are two
+		// steps of the same nesting, and must not share a color.
+		int lineLevel = indentLevelAt(text, 0, tabs);
+		int[] offsets = new int[64];
+		int[] colors = new int[64];
+		int size = 0;
+		int state = 0; // 0 code, 1 single, 2 double, 3 line, 4 block, 5 backtick, 6 XML comment
+		boolean escaped = false;
+		for (int i = 0; i < text.length(); i++) {
+			char ch = text.charAt(i);
+			char next = i + 1 < text.length() ? text.charAt(i + 1) : '\0';
+			if (ch == '\n') {
+				lineLevel = indentLevelAt(text, i + 1, tabs);
+			}
+			if (state == 3) {
+				if (ch == '\n' || ch == '\r') state = 0;
+				continue;
+			}
+			if (state == 4) {
+				if (ch == '*' && next == '/') { state = 0; i++; }
+				continue;
+			}
+			if (state == 6) {
+				if (ch == '-' && next == '-' && i + 2 < text.length()
+						&& text.charAt(i + 2) == '>') { state = 0; i += 2; }
+				continue;
+			}
+			if (state == 1 || state == 2 || state == 5) {
+				char quote = state == 1 ? '\'' : (state == 2 ? '"' : '`');
+				if (escaped) {
+					escaped = false;
+				} else if (ch == '\\') {
+					escaped = true;
+				} else if (ch == quote) {
+					state = 0;
+				}
+				continue;
+			}
+			if (ch == '/' && next == '/') { state = 3; i++; continue; }
+			if (ch == '/' && next == '*') { state = 4; i++; continue; }
+			if (ch == '#') { state = 3; continue; }
+			if (ch == '<' && next == '!' && i + 3 < text.length()
+					&& text.charAt(i + 2) == '-' && text.charAt(i + 3) == '-') {
+				state = 6; i += 3; continue;
+			}
+			if (ch == '\'') { state = 1; escaped = false; continue; }
+			if (ch == '"') { state = 2; escaped = false; continue; }
+			if (ch == '`') { state = 5; escaped = false; continue; }
+			if (ch == '(') {
+				if (size == offsets.length) {
+					int[] largerOffsets = new int[size * 2];
+					int[] largerColors = new int[size * 2];
+					System.arraycopy(offsets, 0, largerOffsets, 0, size);
+					System.arraycopy(colors, 0, largerColors, 0, size);
+					offsets = largerOffsets;
+					colors = largerColors;
+				}
+				offsets[size] = i;
+				colors[size] = (size > 0 ? colors[size - 1] + 1 : lineLevel + 1)
+						% parenthesisPalette.length;
+				size++;
+			} else if (ch == ')' && size > 0) {
+				size--;
+				int color = colors[size];
+				drawParenthesis(gc, offsets[size], '(', color, startLine, endLine);
+				drawParenthesis(gc, i, ')', color, startLine, endLine);
+			}
+		}
+	}
+
+	/**
+	 * The indentation level of the line starting at the given index.
+	 *
+	 * @param text
+	 *            the whole document text
+	 * @param lineStart
+	 *            the index of the first character of the line
+	 * @param tabs
+	 *            the width of a tabulation, in columns
+	 * @return the indentation of the line, in levels
+	 */
+	private static int indentLevelAt(String text, int lineStart, int tabs) {
+		int column = 0;
+		for (int i = lineStart; i < text.length(); i++) {
+			char ch = text.charAt(i);
+			if (ch == ' ') {
+				column++;
+			} else if (ch == '\t') {
+				column += tabs - column % tabs;
+			} else {
+				break;
+			}
+		}
+		return column / tabs;
+	}
+
+	private void drawParenthesis(GC gc, int documentOffset, char glyph,
+			int color, int startLine, int endLine) {
+		int widgetOffset = getWidgetOffset(documentOffset);
+		if (widgetOffset < 0 || widgetOffset >= fTextWidget.getCharCount()) {
+			return;
+		}
+		int line = fTextWidget.getLineAtOffset(widgetOffset);
+		if (line < startLine || line > endLine) {
+			return;
+		}
+		Point selection = fTextWidget.getSelectionRange();
+		if (selection != null && selection.y > 0
+				&& widgetOffset >= selection.x
+				&& widgetOffset < selection.x + selection.y) {
+			return;
+		}
+		Color oldForeground = gc.getForeground();
+		Color oldBackground = gc.getBackground();
+		int oldAlpha = fIsAdvancedGraphicsPresent ? gc.getAlpha() : 255;
+		if (fIsAdvancedGraphicsPresent) gc.setAlpha(255);
+		gc.setForeground(parenthesisPalette[color]);
+		Color lineBackground = fTextWidget.getLineBackground(line);
+		gc.setBackground(lineBackground != null ? lineBackground
+				: fTextWidget.getBackground());
+		Point position = fTextWidget.getLocationAtOffset(widgetOffset);
+		gc.drawText(String.valueOf(glyph), position.x, position.y, false);
+		gc.setForeground(oldForeground);
+		gc.setBackground(oldBackground);
+		if (fIsAdvancedGraphicsPresent) gc.setAlpha(oldAlpha);
 	}
 
 	private static int levelOf(int column, int tabs) {

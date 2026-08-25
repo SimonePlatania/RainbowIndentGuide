@@ -44,8 +44,12 @@ public class IndentLevelCalculator {
 	private int tabWidth = 4;
 
 	private int[] indents;
+	/** Structural guide columns contributed by multi-line round parentheses. */
+	private long[] parenthesisGuides;
+	private boolean[] parenthesisContext;
 	private int cachedCharCount = -1;
 	private int cachedLineCount = -1;
+	private int cachedTextHash;
 
 	private final int[] memoStart = new int[MAX_LEVELS];
 	private final int[] memoEnd = new int[MAX_LEVELS];
@@ -228,8 +232,12 @@ public class IndentLevelCalculator {
 	public void refresh() {
 		int chars = source.getCharCount();
 		int lines = source.getLineCount();
+		int textHash = 1;
+		for (int i = 0; i < lines; i++) {
+			textHash = 31 * textHash + lineAt(i).hashCode();
+		}
 		if (indents == null || chars != cachedCharCount || lines != cachedLineCount
-				|| indents.length != lines) {
+				|| indents.length != lines || textHash != cachedTextHash) {
 			int[] computed = new int[lines];
 			for (int i = 0; i < lines; i++) {
 				computed[i] = effectiveIndent(i);
@@ -237,10 +245,148 @@ public class IndentLevelCalculator {
 			indents = computed;
 			cachedCharCount = chars;
 			cachedLineCount = lines;
+			cachedTextHash = textHash;
 		}
+		computeParenthesisGuides(lines);
 		for (int i = 0; i < MAX_LEVELS; i++) {
 			memoValid[i] = false;
 		}
+	}
+
+	/**
+	 * Finds multi-line parenthesis pairs and records only the indentation of
+	 * their opening lines. Continuation indentation may be two or more tab
+	 * widths, but those intermediate columns are alignment, not nested blocks.
+	 */
+	private void computeParenthesisGuides(int lineCount) {
+		parenthesisGuides = new long[lineCount];
+		parenthesisContext = new boolean[lineCount];
+		int[] openLines = new int[64];
+		int[] openColumns = new int[64];
+		int size = 0;
+		int state = 0; // 0 code, 1 single, 2 double, 4 block, 5 backtick, 6 XML
+		boolean escaped = false;
+		for (int line = 0; line < lineCount; line++) {
+			String text = lineAt(line);
+			for (int i = 0; i < text.length(); i++) {
+				char ch = text.charAt(i);
+				char next = i + 1 < text.length() ? text.charAt(i + 1) : '\0';
+				if (state == 4) {
+					if (ch == '*' && next == '/') { state = 0; i++; }
+					continue;
+				}
+				if (state == 6) {
+					if (ch == '-' && next == '-' && i + 2 < text.length()
+							&& text.charAt(i + 2) == '>') { state = 0; i += 2; }
+					continue;
+				}
+				if (state == 1 || state == 2 || state == 5) {
+					char quote = state == 1 ? '\'' : (state == 2 ? '"' : '`');
+					if (escaped) escaped = false;
+					else if (ch == '\\') escaped = true;
+					else if (ch == quote) state = 0;
+					continue;
+				}
+				if (ch == '/' && next == '/') break;
+				if (ch == '#') break;
+				if (ch == '/' && next == '*') { state = 4; i++; continue; }
+				if (ch == '<' && next == '!' && i + 3 < text.length()
+						&& text.charAt(i + 2) == '-' && text.charAt(i + 3) == '-') {
+					state = 6; i += 3; continue;
+				}
+				if (ch == '\'') { state = 1; escaped = false; continue; }
+				if (ch == '"') { state = 2; escaped = false; continue; }
+				if (ch == '`') { state = 5; escaped = false; continue; }
+				if (ch == '(') {
+					if (size == openLines.length) {
+						int[] lines = new int[size * 2];
+						int[] columns = new int[size * 2];
+						System.arraycopy(openLines, 0, lines, 0, size);
+						System.arraycopy(openColumns, 0, columns, 0, size);
+						openLines = lines;
+						openColumns = columns;
+					}
+					openLines[size] = line;
+					openColumns[size] = countSpaces(text);
+					size++;
+				} else if (ch == ')' && size > 0) {
+					size--;
+					int from = openLines[size];
+					int column = openColumns[size];
+					if (line > from && column % tabWidth == 0) {
+						int level = column / tabWidth;
+						if (level >= 0 && level < MAX_LEVELS) {
+							long bit = 1L << level;
+							for (int covered = from + 1; covered <= line; covered++) {
+								parenthesisContext[covered] = true;
+								parenthesisGuides[covered] |= bit;
+							}
+						}
+					}
+				}
+			}
+			// Ordinary quoted strings do not continue onto the next source line.
+			if (state == 1 || state == 2) { state = 0; escaped = false; }
+		}
+	}
+
+	public boolean isParenthesisContext(int line) {
+		return parenthesisContext != null && line >= 0
+				&& line < parenthesisContext.length && parenthesisContext[line];
+	}
+
+	public boolean isParenthesisGuide(int column, int line) {
+		if (parenthesisGuides == null || line < 0
+				|| line >= parenthesisGuides.length || column < 0
+				|| column % tabWidth != 0) {
+			return false;
+		}
+		int level = column / tabWidth;
+		return level < MAX_LEVELS
+				&& (parenthesisGuides[line] & (1L << level)) != 0;
+	}
+
+	/**
+	 * The column of the outermost structural parenthesis guide of a line, that
+	 * is, the indentation of the outermost multi-line parenthesis still open
+	 * there. Guides left of it belong to the enclosing blocks and are drawn as
+	 * usual; only the columns right of it are continuation alignment and must
+	 * not be mistaken for nested blocks.
+	 *
+	 * @param line
+	 *            the widget line number
+	 * @return the column of the outermost parenthesis guide, or -1
+	 */
+	public int outermostParenthesisGuide(int line) {
+		if (parenthesisGuides == null || line < 0
+				|| line >= parenthesisGuides.length) {
+			return -1;
+		}
+		long bits = parenthesisGuides[line];
+		if (bits == 0) {
+			return -1;
+		}
+		for (int level = 0; level < MAX_LEVELS; level++) {
+			if ((bits & (1L << level)) != 0) {
+				return level * tabWidth;
+			}
+		}
+		return -1;
+	}
+
+	/** Returns the deepest structural parenthesis guide not right of column. */
+	public int parenthesisGuideAtOrBefore(int column, int line) {
+		int base = outermostParenthesisGuide(line);
+		if (base < 0 || column <= base) {
+			return column;
+		}
+		for (int candidate = column - column % tabWidth; candidate > base;
+				candidate -= tabWidth) {
+			if (isParenthesisGuide(candidate, line)) {
+				return candidate;
+			}
+		}
+		return base;
 	}
 
 	/**
@@ -256,6 +402,41 @@ public class IndentLevelCalculator {
 	 *            the widget line number
 	 * @return <code>true</code> if the guide does not match its braces
 	 */
+	/**
+	 * The nearest line above the given one carrying code, comments and blank
+	 * lines skipped.
+	 *
+	 * @param line
+	 *            the line to start from, excluded
+	 * @return the widget line number, or -1
+	 */
+	private int previousCode(int line) {
+		for (int i = line - 1; i >= 0; i--) {
+			if (!isTransparentLine(lineAt(i))) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * The nearest line below the given one carrying code.
+	 *
+	 * @param line
+	 *            the line to start from, excluded
+	 * @param lineCount
+	 *            the number of lines of the text
+	 * @return the widget line number, or -1
+	 */
+	private int nextCode(int line, int lineCount) {
+		for (int i = line + 1; i < lineCount; i++) {
+			if (!isTransparentLine(lineAt(i))) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	public boolean blockMismatch(int col, int line) {
 		if (indents == null || line >= indents.length) {
 			return false;
@@ -274,26 +455,25 @@ public class IndentLevelCalculator {
 			end++;
 		}
 		boolean bad = false;
-		for (int i = start - 1; i >= 0; i--) {
-			String t = lineAt(i);
-			if (isTransparentLine(t)) {
-				continue;
-			}
-			if (opensBlock(t)) {
-				bad = countSpaces(t) != col;
-			}
-			break;
+		// The braces of the block are the lines just outside the region, and
+		// they are what the guide has to line up with. The first line inside
+		// the region stands in for the brace above only when there is no brace
+		// above: that is how a brace shifted right is caught, the region having
+		// swallowed it because its indent is deeper than the guide. Read the
+		// other way round, the line inside would answer for every block nested
+		// one level deeper and grey correct code.
+		int above = previousCode(start);
+		if (above >= 0 && opensBlock(lineAt(above))) {
+			bad = countSpaces(lineAt(above)) != col;
+		} else if (opensBlock(lineAt(start))) {
+			bad = countSpaces(lineAt(start)) != col;
 		}
 		if (!bad) {
-			for (int i = end + 1; i < n; i++) {
-				String t = lineAt(i);
-				if (isTransparentLine(t)) {
-					continue;
-				}
-				if (closesBlock(t)) {
-					bad = countSpaces(t) != col;
-				}
-				break;
+			int below = nextCode(end, n);
+			if (below >= 0 && closesBlock(lineAt(below))) {
+				bad = countSpaces(lineAt(below)) != col;
+			} else if (closesBlock(lineAt(end))) {
+				bad = countSpaces(lineAt(end)) != col;
 			}
 		}
 		if (level >= 0 && level < MAX_LEVELS) {

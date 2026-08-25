@@ -33,7 +33,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		store.setDefault(PreferenceConstants.ENABLED, true);
-		store.setDefault(PreferenceConstants.LINE_ALPHA, 200);
+		// The guides are a hint, not text: they stay well under the code they
+		// run beside, so that the eye finds them only when it looks for them.
+		store.setDefault(PreferenceConstants.LINE_ALPHA, 130);
 		store.setDefault(PreferenceConstants.LINE_STYLE, SWT.LINE_SOLID);
 		store.setDefault(PreferenceConstants.LINE_WIDTH, 1);
 		store.setDefault(PreferenceConstants.LINE_SHIFT, 0);

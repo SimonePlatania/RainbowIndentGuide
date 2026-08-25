@@ -447,12 +447,21 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 						if (col > innermost) {
 							col = innermost;
 						}
-						if (col < 0) {
-							col = 0;
+						// Lighting a column nothing is drawn at lights nothing.
+						// With the leftmost guide turned off - which is how it
+						// comes - a caret anywhere in the first level of
+						// indentation lands on column 0 and the highlight had
+						// no line to appear on, which read as the caret being
+						// followed by nothing at all.
+						int leftmost = settings.isDrawLeftEnd() ? 0 : tabs;
+						if (col < leftmost) {
+							col = count > leftmost ? leftmost : -1;
 						}
-						col = calculator.parenthesisGuideAtOrBefore(col,
-								caretLine);
-						line = caretLine;
+						if (col >= 0) {
+							col = calculator.parenthesisGuideAtOrBefore(col,
+									caretLine);
+							line = caretLine;
+						}
 					}
 				}
 				if (col >= 0 && line >= 0) {

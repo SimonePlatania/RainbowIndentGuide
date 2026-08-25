@@ -105,7 +105,7 @@ Updates*.
 ### From the archive
 
 For an installation with no network access. Download
-`RainbowIndentGuide-1.2.0-updatesite.zip` from the
+`RainbowIndentGuide-1.2.5-updatesite.zip` from the
 [latest release](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest).
 Don't unzip it.
 
@@ -123,7 +123,7 @@ To uninstall: *Help > About > Installation Details*, select it, Uninstall.
 <summary><b>Fallback: dropins</b> (older Eclipse, locked-down installations, no network)</summary>
 
 1. close Eclipse
-2. copy `alien.rainbow.indentguide_1.2.0.jar` into the `dropins/` folder of
+2. copy `alien.rainbow.indentguide_1.2.5.jar` into the `dropins/` folder of
    your Eclipse installation — the jar as-is, don't unpack it
 3. start Eclipse once with `eclipse -clean`, otherwise the bundle cache hides
    the new file

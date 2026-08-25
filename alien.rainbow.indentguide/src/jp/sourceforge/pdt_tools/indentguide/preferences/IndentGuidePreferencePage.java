@@ -49,6 +49,8 @@ IWorkbenchPreferencePage {
   private Button drawLeftEnd;
   private Button drawBlankLine;
   private Button skipCommentBlock;
+  private Button liftComment;
+  private Button liftCode;
   private Composite target;
   private Tree contentTypesTree;
   IContentType textType;
@@ -128,6 +130,12 @@ IWorkbenchPreferencePage {
     skipCommentBlock = new Button(drawing, SWT.CHECK);
     skipCommentBlock
     .setText(Messages.IndentGuidePreferencePage_skip_comment_block_label);
+    liftComment = new Button(drawing, SWT.CHECK);
+    liftComment
+    .setText(Messages.IndentGuidePreferencePage_lift_comment_label);
+    liftCode = new Button(drawing, SWT.CHECK);
+    liftCode
+    .setText(Messages.IndentGuidePreferencePage_lift_code_label);
 
     final Group group3 = new Group(composite, SWT.NONE);
     group3.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
@@ -183,6 +191,10 @@ IWorkbenchPreferencePage {
         .getDefaultBoolean(PreferenceConstants.DRAW_BLANK_LINE));
     skipCommentBlock.setSelection(store
         .getDefaultBoolean(PreferenceConstants.SKIP_COMMENT_BLOCK));
+    liftComment.setSelection(store
+        .getDefaultBoolean(PreferenceConstants.LIFT_COMMENT));
+    liftCode.setSelection(store
+        .getDefaultBoolean(PreferenceConstants.LIFT_CODE));
     enableControls(enabled.getSelection());
     for (final TreeItem item : contentTypesTree.getItems()) {
       checkItems(item, false);
@@ -213,6 +225,10 @@ IWorkbenchPreferencePage {
         drawBlankLine.getSelection());
     store.setValue(PreferenceConstants.SKIP_COMMENT_BLOCK,
         skipCommentBlock.getSelection());
+    store.setValue(PreferenceConstants.LIFT_COMMENT,
+        liftComment.getSelection());
+    store.setValue(PreferenceConstants.LIFT_CODE,
+        liftCode.getSelection());
     String types = "";
     for (final TreeItem item : contentTypesTree.getItems()) {
       types = getContentTypes(item, types);
@@ -239,6 +255,10 @@ IWorkbenchPreferencePage {
         .getBoolean(PreferenceConstants.DRAW_BLANK_LINE));
     skipCommentBlock.setSelection(store
         .getBoolean(PreferenceConstants.SKIP_COMMENT_BLOCK));
+    liftComment.setSelection(store
+        .getBoolean(PreferenceConstants.LIFT_COMMENT));
+    liftCode.setSelection(store
+        .getBoolean(PreferenceConstants.LIFT_CODE));
     enableControls(enabled.getSelection());
     final String type = store.getString(PreferenceConstants.CONTENT_TYPES);
     final String types[] = type.split("\\|");

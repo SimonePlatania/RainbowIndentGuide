@@ -15,5 +15,7 @@ public class PreferenceConstants {
 	public static final String DRAW_BLANK_LINE = "draw_blank_line"; //$NON-NLS-1$
 	public static final String SKIP_COMMENT_BLOCK = "skip_comment_block"; //$NON-NLS-1$
 	public static final String CONTENT_TYPES = "content_types"; //$NON-NLS-1$
+	public static final String LIFT_COMMENT = "lift_comment"; //$NON-NLS-1$
+	public static final String LIFT_CODE = "lift_code"; //$NON-NLS-1$
 
 }

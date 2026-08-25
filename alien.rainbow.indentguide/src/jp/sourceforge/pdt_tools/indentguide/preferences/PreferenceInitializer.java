@@ -44,6 +44,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.DRAW_LEFT_END, false);
 		store.setDefault(PreferenceConstants.DRAW_BLANK_LINE, true);
 		store.setDefault(PreferenceConstants.SKIP_COMMENT_BLOCK, false);
+		store.setDefault(PreferenceConstants.LIFT_COMMENT, true);
+		// Off: moving code is a heavier thing to happen unasked than moving a
+		// comment, so this half is only there for whoever wants it.
+		store.setDefault(PreferenceConstants.LIFT_CODE, false);
 		store.setDefault(PreferenceConstants.CONTENT_TYPES,
 				join(DEFAULT_CONTENT_TYPES));
 		IndentGuideStyle.applyDefaults(store);

@@ -23,6 +23,8 @@ public class Messages extends NLS {
 	public static String IndentGuidePreferencePage_draw_left_end_label;
 	public static String IndentGuidePreferencePage_draw_blank_line_label;
 	public static String IndentGuidePreferencePage_skip_comment_block_label;
+	public static String IndentGuidePreferencePage_lift_comment_label;
+	public static String IndentGuidePreferencePage_lift_code_label;
 	public static String IndentGuidePreferencePage_group3_label;
 
 	static {

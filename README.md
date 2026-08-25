@@ -122,7 +122,7 @@ bundles. Preferences are not carried over.
 
 ## Requirements
 
-Tested on Eclipse 2020-03, 2024-09 and 2026-06. Compiled with `javac --release 8`, so
+Tested on Eclipse 2020-06, 2024-09 and 2026-06. Compiled with `javac --release 8`, so
 it should also load on much older installations (3.6 and later) — an API newer
 than Java 8 fails at compile time rather than throwing `NoSuchMethodError` at
 runtime. Requires Java 8 or later.

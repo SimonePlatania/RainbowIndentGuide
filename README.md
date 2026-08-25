@@ -40,7 +40,7 @@
 
 - one color per indentation level (rainbow), cycled past the seventh
 - the braces of a block are repainted in the color of its guide, so the two
-  read as one shape
+  read as one shape, a comment written behind the brace included
 - matching round parentheses are colored by nesting depth with their own
   configurable seven-color palette, independent from braces and guides
 - click a guide to light and pin it; a click away from every guide releases it.
@@ -53,18 +53,22 @@
   the columns its continuation lines are aligned to are alignment, not nesting,
   and the guides of the blocks around it run through unbroken
 - blank lines and comments no longer break the vertical lines
-- backspace at the indentation of a comment written under a brace moves it onto
-  the line above, instead of shaving a level off an indentation that was
-  already right. The same for code written hard against a brace, off until it
-  is asked for. A brace on a line of its own never moves: it keeps walking left
-  to the level of the block it closes
+- backspace at the indentation of a comment written under a brace can move it
+  onto the line above, instead of shaving a level off an indentation that was
+  already right. The same for code written hard against a brace. Both halves
+  are off until they are asked for: a backspace that moves a line is a change
+  to what the key does. A brace on a line of its own never moves: it keeps
+  walking left to the level of the block it closes
 - each guide is stroked in one piece over the lines it spans, so thin or barely
   opaque lines stay clean instead of breaking up into dots
 - sub-pixel guide placement, so the lines do not drift right on deep levels
   when DPI scaling is on
-- optional greying of the single guide that does not line up with the brace
-  opening or closing its block; when the indentation is fixed the guide blinks
-  white for a moment as it takes its color back
+- greying of the single guide that does not line up with the brace opening or
+  closing its block; when the indentation is fixed the guide blinks white for a
+  moment as it takes its color back, over the lines of that block alone and not
+  over every block sharing its column. A header spread over several lines,
+  `catch (A | B` continued by `| C e) {`, opens where its statement does: the
+  alignment of its continuation is not read as a wrong indentation
 - the tabs restored with the workbench are painted at startup, without having
   to be closed and reopened
 - the common content types (Java, XML, properties, JSP, HTML, CSS, JS, PHP,

@@ -122,6 +122,16 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	 */
 	private final long[] flashEnd = new long[MAX_LEVELS];
 	private final boolean[] irregularKnown = new boolean[MAX_LEVELS];
+	/**
+	 * Per level, the lines the grey ran over, and the lines the flash runs
+	 * over. A column carries the guides of every block at that depth, one under
+	 * the other; only the one that was grey has been fixed, so only its own
+	 * lines blink and the method above keeps its colour.
+	 */
+	private final int[] greyStart = new int[MAX_LEVELS];
+	private final int[] greyEnd = new int[MAX_LEVELS];
+	private final int[] flashStart = new int[MAX_LEVELS];
+	private final int[] flashLast = new int[MAX_LEVELS];
 	/** Scroll position the irregular transition state belongs to. */
 	private int irregularTopIndex = -1;
 	/** The deadline the booked flash timer covers, 0 when none is booked. */
@@ -393,6 +403,15 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			start--;
 		}
 		return start;
+	}
+
+	/** The line the caret is on, -1 if it cannot be told. */
+	private int caretLine() {
+		try {
+			return fTextWidget.getLineAtOffset(fTextWidget.getCaretOffset());
+		} catch (Exception e) {
+			return -1;
+		}
 	}
 
 	private int blockEnd(int col, int line) {
@@ -668,6 +687,10 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			for (int i = 0; i < MAX_LEVELS; i++) {
 				irregularKnown[i] = false;
 				flashEnd[i] = 0;
+				greyStart[i] = -1;
+				greyEnd[i] = -1;
+				flashStart[i] = -1;
+				flashLast[i] = -1;
 			}
 			irregularTopIndex = top;
 		}
@@ -702,7 +725,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			int idx = palette != null && palette.length > 0
 					? (col / tabs) % palette.length : -1;
 			boolean drawn = false;
-			boolean irregular = false;
+			int greyFrom = -1;
+			int greyTo = -1;
 			for (int k = 0; k < visibleCount; k++) {
 				colors[k] = null;
 				int line = startLine + k;
@@ -724,7 +748,10 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 				boolean grey = !parenthesisGuide && settings.isIrregularEnabled()
 						&& calculator.blockMismatch(col, line);
 				if (grey) {
-					irregular = true;
+					if (greyFrom < 0) {
+						greyFrom = line;
+					}
+					greyTo = line;
 				}
 				if (grey && irregularColor != null) {
 					colors[k] = irregularColor;
@@ -742,12 +769,13 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			// The state of a column is only carried forward while it is on
 			// screen; scrolling past a level must not read as it being fixed.
 			if (drawn) {
-				long end = notchFlash(slot, irregular, now);
+				long end = notchFlash(slot, col, greyFrom, greyTo, now);
 				if (end > now) {
 					if (end > lastFlashEnd) {
 						lastFlashEnd = end;
 					}
-					whiten(colors, alphas);
+					whiten(colors, alphas, startLine, flashStart[slot],
+							flashLast[slot]);
 				}
 			}
 			drawColumnRuns(gc, colors, alphas, startLine, col);
@@ -921,15 +949,48 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	 *
 	 * @param slot
 	 *            the indentation level of the guide, already clamped
-	 * @param irregular
-	 *            whether the level is drawn grey by the current pass
+	 * @param greyFrom
+	 *            the first line drawn grey by the current pass, -1 if none
+	 * @param greyTo
+	 *            the last line drawn grey by the current pass, -1 if none
 	 * @param now
 	 *            the instant of the current drawing pass
 	 * @return the instant the flash of that level ends, 0 if it is not flashing
 	 */
-	private long notchFlash(int slot, boolean irregular, long now) {
+	private long notchFlash(int slot, int col, int greyFrom, int greyTo,
+			long now) {
+		boolean irregular = greyFrom >= 0;
 		boolean fixed = irregularKnown[slot] && !irregular;
+		if (fixed) {
+			// The lines the grey was on are the lines the flash belongs to:
+			// what has been fixed is that block, not every block that happens
+			// to have a guide in the same column.
+			int from = greyStart[slot];
+			int to = greyEnd[slot];
+			// While a brace is missing the lines of several blocks run together
+			// into one region, and the grey covers all of them; the block the
+			// caret is in is the one that has just been closed, and the flash
+			// is cut down to it so that the method above keeps its colour.
+			int caret = caretLine();
+			if (caret >= 0 && caret >= from - 1 && caret <= to + 1) {
+				int at = caret < from ? from : (caret > to ? to : caret);
+				int top = blockStart(col, at);
+				int bottom = blockEnd(col, at);
+				if (top > from) {
+					from = top;
+				}
+				if (bottom < to) {
+					to = bottom;
+				}
+			}
+			flashStart[slot] = from;
+			flashLast[slot] = to;
+		}
 		irregularKnown[slot] = irregular;
+		if (irregular) {
+			greyStart[slot] = greyFrom;
+			greyEnd[slot] = greyTo;
+		}
 		int duration = settings.getIrregularFlash();
 		if (duration <= 0) {
 			return 0;
@@ -941,17 +1002,26 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	}
 
 	/**
-	 * Turns the guides of one column white for the length of the flash.
+	 * Turns white, for the length of the flash, the guide of one column over
+	 * the lines the block that has just been fixed spans.
 	 *
 	 * @param colors
 	 *            per visible line, the color of the guide
 	 * @param alphas
 	 *            per visible line, the opacity of the guide
+	 * @param startLine
+	 *            the first line the arrays stand for
+	 * @param from
+	 *            the first line of the block being flashed
+	 * @param to
+	 *            the last line of the block being flashed
 	 */
-	private void whiten(Color[] colors, int[] alphas) {
+	private void whiten(Color[] colors, int[] alphas, int startLine, int from,
+			int to) {
 		Color white = fTextWidget.getDisplay().getSystemColor(SWT.COLOR_WHITE);
 		for (int k = 0; k < colors.length; k++) {
-			if (colors[k] != null) {
+			int line = startLine + k;
+			if (colors[k] != null && line >= from && line <= to) {
 				colors[k] = white;
 				alphas[k] = 255;
 			}

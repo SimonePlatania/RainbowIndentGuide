@@ -152,12 +152,68 @@ public class IndentLevelCalculator {
 		return t.startsWith("//") || t.startsWith("/*") || t.startsWith("*"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
+	/**
+	 * Blanks out the comments of a line, leaving every other character where it
+	 * was, so that an index taken on the result still addresses the original
+	 * text. A brace with a comment behind it, <code>if (x) {// why</code>, is
+	 * still the brace opening the block, and this is what lets it be seen as
+	 * one.
+	 * <p>
+	 * Quoted text is left alone, so that a <code>//</code> inside a string does
+	 * not swallow the rest of the line.
+	 *
+	 * @param text
+	 *            the text of a line
+	 * @return the same text with its comments replaced by spaces
+	 */
+	public static String maskComments(String text) {
+		if (text == null || text.indexOf('/') < 0) {
+			return text;
+		}
+		char[] chars = text.toCharArray();
+		boolean block = false;
+		char quote = 0;
+		for (int i = 0; i < chars.length; i++) {
+			char ch = chars[i];
+			if (block) {
+				boolean end = ch == '*' && i + 1 < chars.length
+						&& chars[i + 1] == '/';
+				chars[i] = ' ';
+				if (end) {
+					chars[++i] = ' ';
+					block = false;
+				}
+			} else if (quote != 0) {
+				if (ch == '\\' && i + 1 < chars.length) {
+					i++;
+				} else if (ch == quote) {
+					quote = 0;
+				}
+			} else if (ch == '"' || ch == '\'') {
+				quote = ch;
+			} else if (ch == '/' && i + 1 < chars.length) {
+				if (chars[i + 1] == '/') {
+					// As far as the code goes, the line ends here.
+					for (int j = i; j < chars.length; j++) {
+						chars[j] = ' ';
+					}
+					break;
+				} else if (chars[i + 1] == '*') {
+					chars[i] = ' ';
+					chars[++i] = ' ';
+					block = true;
+				}
+			}
+		}
+		return new String(chars);
+	}
+
 	public static boolean opensBlock(String text) {
-		return text.trim().endsWith("{"); //$NON-NLS-1$
+		return maskComments(text).trim().endsWith("{"); //$NON-NLS-1$
 	}
 
 	public static boolean closesBlock(String text) {
-		return text.trim().startsWith("}"); //$NON-NLS-1$
+		return maskComments(text).trim().startsWith("}"); //$NON-NLS-1$
 	}
 
 	/**
@@ -171,7 +227,8 @@ public class IndentLevelCalculator {
 	 * @return the character index of the brace, or -1
 	 */
 	public static int openBraceIndex(String text) {
-		return text != null && opensBlock(text) ? text.lastIndexOf('{') : -1;
+		return text != null && opensBlock(text) ? maskComments(text)
+				.lastIndexOf('{') : -1;
 	}
 
 	/**
@@ -183,7 +240,8 @@ public class IndentLevelCalculator {
 	 * @return the character index of the brace, or -1
 	 */
 	public static int closeBraceIndex(String text) {
-		return text != null && closesBlock(text) ? text.indexOf('}') : -1;
+		return text != null && closesBlock(text) ? maskComments(text)
+				.indexOf('}') : -1;
 	}
 
 	private int neighbourIndent(int line, boolean forward) {
@@ -437,6 +495,28 @@ public class IndentLevelCalculator {
 		return -1;
 	}
 
+	/**
+	 * The indentation the brace on the given line has to be read at: that of
+	 * the line the statement starts on.
+	 * <p>
+	 * A header spread over several lines, <code>catch (A | B</code> continued
+	 * by <code>| C e) {</code>, carries its brace on a line indented to the
+	 * alignment of the parentheses, which is alignment and not a level. The
+	 * block still opens where the statement does, and it is that indentation
+	 * the guide of its body lines up with.
+	 *
+	 * @param line
+	 *            the widget line number of the line carrying the brace
+	 * @return the indentation of the line the statement starts on, in columns
+	 */
+	private int openIndent(int line) {
+		int start = line;
+		while (start > 0 && isParenthesisContext(start)) {
+			start--;
+		}
+		return countSpaces(lineAt(start));
+	}
+
 	public boolean blockMismatch(int col, int line) {
 		if (indents == null || line >= indents.length) {
 			return false;
@@ -464,9 +544,9 @@ public class IndentLevelCalculator {
 		// one level deeper and grey correct code.
 		int above = previousCode(start);
 		if (above >= 0 && opensBlock(lineAt(above))) {
-			bad = countSpaces(lineAt(above)) != col;
+			bad = openIndent(above) != col;
 		} else if (opensBlock(lineAt(start))) {
-			bad = countSpaces(lineAt(start)) != col;
+			bad = openIndent(start) != col;
 		}
 		if (!bad) {
 			int below = nextCode(end, n);

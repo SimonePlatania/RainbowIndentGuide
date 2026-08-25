@@ -41,12 +41,15 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.LINE_SHIFT, 0);
 		store.setDefault(PreferenceConstants.LINE_COLOR,
 				IndentGuideStyle.DEFAULT_LINE_COLOR);
-		store.setDefault(PreferenceConstants.DRAW_LEFT_END, false);
+		// The guide of the first level is part of the shape too: without it the
+		// outermost block is the only one left without a line beside it.
+		store.setDefault(PreferenceConstants.DRAW_LEFT_END, true);
 		store.setDefault(PreferenceConstants.DRAW_BLANK_LINE, true);
 		store.setDefault(PreferenceConstants.SKIP_COMMENT_BLOCK, false);
-		store.setDefault(PreferenceConstants.LIFT_COMMENT, true);
-		// Off: moving code is a heavier thing to happen unasked than moving a
-		// comment, so this half is only there for whoever wants it.
+		// Both halves are off: a backspace that moves a line instead of eating
+		// an indentation level is a change to what the key does, and that is
+		// something to ask for rather than to find already on.
+		store.setDefault(PreferenceConstants.LIFT_COMMENT, false);
 		store.setDefault(PreferenceConstants.LIFT_CODE, false);
 		store.setDefault(PreferenceConstants.CONTENT_TYPES,
 				join(DEFAULT_CONTENT_TYPES));

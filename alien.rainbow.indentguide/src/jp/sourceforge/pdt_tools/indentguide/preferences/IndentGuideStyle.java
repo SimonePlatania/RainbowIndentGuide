@@ -67,7 +67,7 @@ public final class IndentGuideStyle {
 	public static final int DEFAULT_ACTIVE_LIGHTEN = 55;
 	public static final boolean DEFAULT_CARET_HIGHLIGHT_ENABLED = false;
 	public static final int DEFAULT_IRREGULAR_ALPHA = 70;
-	public static final int DEFAULT_IRREGULAR_FLASH = 650;
+	public static final int DEFAULT_IRREGULAR_FLASH = 520;
 	public static final boolean DEFAULT_BRACE_COLOR_ENABLED = true;
 	public static final boolean DEFAULT_PARENTHESIS_COLOR_ENABLED = true;
 
@@ -109,7 +109,7 @@ public final class IndentGuideStyle {
 		store.setDefault(ACTIVE_ALPHA, DEFAULT_ACTIVE_ALPHA);
 		store.setDefault(ACTIVE_LIGHTEN, DEFAULT_ACTIVE_LIGHTEN);
 		store.setDefault(BRACE_COLOR_ENABLED, DEFAULT_BRACE_COLOR_ENABLED);
-		store.setDefault(IRREGULAR_ENABLED, false);
+		store.setDefault(IRREGULAR_ENABLED, true);
 		store.setDefault(IRREGULAR_COLOR, DEFAULT_IRREGULAR_COLOR);
 		store.setDefault(IRREGULAR_ALPHA, DEFAULT_IRREGULAR_ALPHA);
 		store.setDefault(IRREGULAR_FLASH, DEFAULT_IRREGULAR_FLASH);

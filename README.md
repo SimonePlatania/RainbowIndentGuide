@@ -39,11 +39,21 @@
   read as one shape
 - matching round parentheses are colored by nesting depth with their own
   configurable seven-color palette, independent from braces and guides
-- click a guide to light and pin it; a click away from every guide releases it
+- click a guide to light and pin it; a click away from every guide releases it.
+  The lit guide keeps the color of its level and turns it up — brighter and
+  deeper, not washed out towards white
 - following the caret is optional and disabled by default
 - guides follow the brace structure: they start below the line opening the
   block and reach the brace closing it
+- a multi-line call gets one guide, at the indentation of the line opening it:
+  the columns its continuation lines are aligned to are alignment, not nesting,
+  and the guides of the blocks around it run through unbroken
 - blank lines and comments no longer break the vertical lines
+- backspace at the indentation of a comment written under a brace moves it onto
+  the line above, instead of shaving a level off an indentation that was
+  already right. The same for code written hard against a brace, off until it
+  is asked for. A brace on a line of its own never moves: it keeps walking left
+  to the level of the block it closes
 - each guide is stroked in one piece over the lines it spans, so thin or barely
   opaque lines stay clean instead of breaking up into dots
 - sub-pixel guide placement, so the lines do not drift right on deep levels
@@ -51,6 +61,8 @@
 - optional greying of the single guide that does not line up with the brace
   opening or closing its block; when the indentation is fixed the guide blinks
   white for a moment as it takes its color back
+- the tabs restored with the workbench are painted at startup, without having
+  to be closed and reopened
 - the common content types (Java, XML, properties, JSP, HTML, CSS, JS, PHP,
   C/C++) are enabled out of the box
 

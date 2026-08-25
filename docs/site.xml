@@ -5,7 +5,7 @@
       the block holding the caret and detection of irregular indentation.
       A fork of https://github.com/kiritsuku/IndentGuide
    </description>
-   <feature url="features/alien.rainbow.indentguide.feature_1.2.0.jar" id="alien.rainbow.indentguide.feature" version="1.2.0">
+   <feature url="features/alien.rainbow.indentguide.feature_1.2.5.jar" id="alien.rainbow.indentguide.feature" version="1.2.5">
       <category name="rainbow.indentguide"/>
    </feature>
    <category-def name="rainbow.indentguide" label="Rainbow Indent Guide">

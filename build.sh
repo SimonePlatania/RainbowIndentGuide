@@ -118,9 +118,9 @@ rm -f docs/artifacts.jar docs/content.jar
 test -f docs/content.jar || { echo "publisher produced no metadata" >&2; exit 1; }
 
 echo "archiving"
-rm -f RainbowIndentGuide-*-updatesite.zip
+rm -f RainbowIndentGuide-*-updatesite.zip docs/RainbowIndentGuide-*-updatesite.zip
 (cd docs && jar --create --no-manifest \
-	--file "$ROOT/RainbowIndentGuide-$VERSION-updatesite.zip" \
+	--file "$ROOT/docs/RainbowIndentGuide-$VERSION-updatesite.zip" \
 	artifacts.jar content.jar site.xml features plugins)
 
-echo "done: docs/ and RainbowIndentGuide-$VERSION-updatesite.zip are at $VERSION"
+echo "done: docs/ and docs/RainbowIndentGuide-$VERSION-updatesite.zip are at $VERSION"

@@ -2,7 +2,7 @@
 
 🌈 Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases. 🌈
 
-[![Download](https://img.shields.io/badge/Download-1.1.0-2C2255?style=for-the-badge)](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest)
+[![Download](https://img.shields.io/badge/Download-1.2.0-2C2255?style=for-the-badge)](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest)
 [![Eclipse Marketplace](https://img.shields.io/badge/Eclipse%20Marketplace-Install-2C2255?style=for-the-badge&logo=eclipseide&logoColor=white)](https://marketplace.eclipse.org/marketplace-client-intro?mpc_install=7554850)
 
 <img width="1536" height="1024" alt="Rainbow indent guides in the Eclipse Java editor" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />
@@ -37,9 +37,10 @@
 - one color per indentation level (rainbow), cycled past the seventh
 - the braces of a block are repainted in the color of its guide, so the two
   read as one shape
-- the guide of the block holding the caret is lightened, and follows the caret
-- hover a guide to light it up, click it to pin it there; a click away from any
-  guide releases it and hands the highlight back to the caret
+- matching round parentheses are colored by nesting depth with their own
+  configurable seven-color palette, independent from braces and guides
+- click a guide to light and pin it; a click away from every guide releases it
+- following the caret is optional and disabled by default
 - guides follow the brace structure: they start below the line opening the
   block and reach the brace closing it
 - blank lines and comments no longer break the vertical lines
@@ -84,7 +85,7 @@ Updates*.
 ### From the archive
 
 For an installation with no network access. Download
-`RainbowIndentGuide-1.1.0-updatesite.zip` from the
+`RainbowIndentGuide-1.2.0-updatesite.zip` from the
 [latest release](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest).
 Don't unzip it.
 
@@ -102,7 +103,7 @@ To uninstall: *Help > About > Installation Details*, select it, Uninstall.
 <summary><b>Fallback: dropins</b> (older Eclipse, locked-down installations, no network)</summary>
 
 1. close Eclipse
-2. copy `alien.rainbow.indentguide_1.1.0.jar` into the `dropins/` folder of
+2. copy `alien.rainbow.indentguide_1.2.0.jar` into the `dropins/` folder of
    your Eclipse installation — the jar as-is, don't unpack it
 3. start Eclipse once with `eclipse -clean`, otherwise the bundle cache hides
    the new file
@@ -159,7 +160,7 @@ are not looking at a second workspace.
 
     alien.rainbow.indentguide/         plug-in
     alien.rainbow.indentguide.feature/ feature
-    docs/                              p2 repository, served by GitHub Pages
+    docs/                              p2 repository, release JARs and ZIP
     build.sh                           regenerates docs/ and the release zip
 
 `docs/` is the only copy of the update site, and it is what

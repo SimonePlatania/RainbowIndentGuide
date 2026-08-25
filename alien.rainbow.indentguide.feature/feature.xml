@@ -2,13 +2,13 @@
 <feature
       id="alien.rainbow.indentguide.feature"
       label="Rainbow Indent Guide"
-      version="1.1.0"
+      version="1.2.0"
       provider-name="Simone Platania">
 
    <description>
       A fork of Indent Guide (https://github.com/kiritsuku/IndentGuide) adding
-      per level rainbow colors, highlighting of the block holding the caret and
-      detection of irregular indentation.
+      per level rainbow colors, matching parenthesis colors, clickable guide
+      highlighting and detection of irregular indentation.
    </description>
 
    <copyright>

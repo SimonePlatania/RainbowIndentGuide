@@ -2,7 +2,7 @@
 
 🌈 Multi-level rainbow indent guides for Eclipse — a fork of [Indent Guide](https://github.com/kiritsuku/IndentGuide), rebuilt to work on current releases. 🌈
 
-[![Download](https://img.shields.io/badge/Download-1.2.0-2C2255?style=for-the-badge)](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest)
+[![Download](https://img.shields.io/badge/Download-1.2.5-2C2255?style=for-the-badge)](https://github.com/SimonePlatania/RainbowIndentGuide/releases/latest)
 [![Eclipse Marketplace](https://img.shields.io/badge/Eclipse%20Marketplace-Install-2C2255?style=for-the-badge&logo=eclipseide&logoColor=white)](https://marketplace.eclipse.org/marketplace-client-intro?mpc_install=7554850)
 
 <img width="1536" height="1024" alt="Rainbow indent guides in the Eclipse Java editor" src="https://github.com/user-attachments/assets/800262c6-f1c7-4642-af5b-149a587b743a" />

@@ -19,6 +19,7 @@ import jp.sourceforge.pdt_tools.indentguide.preferences.IndentGuideSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.IPaintPositionManager;
 import org.eclipse.jface.text.IPainter;
 import org.eclipse.jface.text.IRegion;
@@ -41,6 +42,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.widgets.Display;
 
 /**
@@ -61,6 +63,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	/** Mirrors the depth the level calculator memoizes. */
 	private static final int MAX_LEVELS = 64;
 
+	private static final boolean IS_WIN32 = "win32".equals(SWT.getPlatform());
+
 	/** Indicates whether this painter is active. */
 	private boolean fIsActive = false;
 	/** The source viewer this painter is attached to. */
@@ -69,6 +73,8 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	private StyledText fTextWidget;
 	/** Tells whether the advanced graphics sub system is available. */
 	private final boolean fIsAdvancedGraphicsPresent;
+	/** whether the paint in progress draws the braces and parentheses with the plain engine */
+	private boolean fPlainGlyphs;
 
 	/** The preferences, refreshed on every change notification. */
 	private final IndentGuideSettings settings = new IndentGuideSettings();
@@ -93,6 +99,15 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 	private Color irregularColor;
 	/** A separate palette whose index is the round-parenthesis nesting depth. */
 	private Color[] parenthesisPalette;
+
+	/** the last scan of the parentheses, see {@link #getParentheses(IDocument)} */
+	private long[] parentheses;
+	private IDocument parenthesesDocument;
+	private long parenthesesStamp;
+	private int parenthesesLength;
+	private String parenthesesText;
+	private int parenthesesTabs;
+	private int parenthesesColors;
 
 	/** The guide of the block holding the caret: column and lines covered. */
 	private int activeColumn = -1;
@@ -513,8 +528,15 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		removePreferenceListener();
 		removeMouseListeners();
 		disposeColors();
+		clearParentheses();
 		fTextViewer = null;
 		fTextWidget = null;
+	}
+
+	private void clearParentheses() {
+		parentheses = null;
+		parenthesesDocument = null;
+		parenthesesText = null;
 	}
 
 	/*
@@ -573,6 +595,7 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			fTextWidget.removePaintListener(this);
 			removeCaretListener();
 			removeMouseListeners();
+			clearParentheses();
 			clearPin();
 			hoverColumn = -1;
 			hoverStart = -1;
@@ -615,7 +638,15 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			LineAttributes lineAttributes = gc.getLineAttributes();
 			gc.setLineStyle(settings.getLineStyle());
 			gc.setLineWidth(settings.getLineWidth());
+			fPlainGlyphs = false;
 			if (fIsAdvancedGraphicsPresent) {
+				// The braces and parentheses are drawn opaque, over the glyphs
+				// of the editor. On Windows, the alpha of the guides switches a
+				// plain GC to the advanced engine, GDI+, where each drawText is
+				// slow and does not render a glyph the way the editor does: the
+				// GC goes back to the plain engine for them, the state it came
+				// in. On GTK the GC is always advanced, there is nothing to gain.
+				fPlainGlyphs = IS_WIN32 && !gc.getAdvanced();
 				int alpha = gc.getAlpha();
 				int antialias = gc.getAntialias();
 				gc.setAlpha(settings.getLineAlpha());
@@ -781,22 +812,41 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 			drawColumnRuns(gc, colors, alphas, startLine, col);
 		}
 		ensureFlashTimer(lastFlashEnd, now);
-		if (settings.isBraceColorEnabled()) {
-			drawBraces(gc, startLine, endLine, tabs, content);
+		if (settings.isBraceColorEnabled() || settings.isParenthesisColorEnabled()) {
+			if (fPlainGlyphs && gc.getAdvanced()) {
+				usePlainEngine(gc);
+			}
+			if (settings.isBraceColorEnabled()) {
+				drawBraces(gc, startLine, endLine, tabs, content);
+			}
+			if (settings.isParenthesisColorEnabled()) {
+				drawParentheses(gc, startLine, endLine);
+			}
 		}
-		if (settings.isParenthesisColorEnabled()) {
-			drawParentheses(gc, startLine, endLine);
+	}
+
+	/**
+	 * Switches the GC back to the plain engine it came with, keeping its
+	 * clipping, which leaving the advanced engine resets.
+	 */
+	private static void usePlainEngine(GC gc) {
+		Region clipping = new Region(gc.getDevice());
+		try {
+			gc.getClipping(clipping);
+			gc.setAdvanced(false);
+			gc.setClipping(clipping);
+		} finally {
+			clipping.dispose();
 		}
 	}
 
 	/**
 	 * Repaints matching round parentheses with a palette independent from the
-	 * guides and braces. The opening offset and its depth are kept on a stack;
-	 * consequently a closing parenthesis always receives the exact color of
-	 * the opening parenthesis it removes from that stack.
-	 * <p>
-	 * The whole model document is scanned, not just the viewport, so a pair
-	 * keeps its color while either end is scrolled or folded out of view.
+	 * guides and braces, see {@link ParenthesisScanner}. The whole model
+	 * document is scanned, not just the viewport, so a pair keeps its color
+	 * while either end is scrolled or folded out of view; the scan is kept until
+	 * the document changes, and only the parentheses of the lines drawn are
+	 * looked at here.
 	 */
 	private void drawParentheses(GC gc, int startLine, int endLine) {
 		if (parenthesisPalette == null || parenthesisPalette.length == 0) {
@@ -806,108 +856,68 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		if (document == null) {
 			return;
 		}
-		String text = document.get();
-		int tabs = tabWidth();
-		// The color of a parenthesis carries on from the depth its line is
-		// indented to, instead of restarting at the first tint: the innermost
-		// guide reaching that line and the parenthesis opening there are two
-		// steps of the same nesting, and must not share a color.
-		int lineLevel = indentLevelAt(text, 0, tabs);
-		int[] offsets = new int[64];
-		int[] colors = new int[64];
-		int size = 0;
-		int state = 0; // 0 code, 1 single, 2 double, 3 line, 4 block, 5 backtick, 6 XML comment
-		boolean escaped = false;
-		for (int i = 0; i < text.length(); i++) {
-			char ch = text.charAt(i);
-			char next = i + 1 < text.length() ? text.charAt(i + 1) : '\0';
-			if (ch == '\n') {
-				lineLevel = indentLevelAt(text, i + 1, tabs);
+		long[] pairs = getParentheses(document);
+		if (pairs.length == 0) {
+			return;
+		}
+		int startOffset = getDocumentOffset(fTextWidget.getOffsetAtLine(startLine));
+		int lastWidgetOffset = endLine + 1 < fTextWidget.getLineCount()
+				? fTextWidget.getOffsetAtLine(endLine + 1) - 1
+				: fTextWidget.getCharCount() - 1;
+		int endOffset = lastWidgetOffset < 0 ? startOffset
+				: getDocumentOffset(lastWidgetOffset);
+		if (startOffset < 0 || endOffset < 0) {
+			return;
+		}
+		Point selection = fTextWidget.getSelectionRange();
+		for (int i = ParenthesisScanner.firstAtOrAfter(pairs,
+				startOffset); i < pairs.length; i++) {
+			long entry = pairs[i];
+			int offset = ParenthesisScanner.offset(entry);
+			if (offset > endOffset) {
+				break;
 			}
-			if (state == 3) {
-				if (ch == '\n' || ch == '\r') state = 0;
-				continue;
-			}
-			if (state == 4) {
-				if (ch == '*' && next == '/') { state = 0; i++; }
-				continue;
-			}
-			if (state == 6) {
-				if (ch == '-' && next == '-' && i + 2 < text.length()
-						&& text.charAt(i + 2) == '>') { state = 0; i += 2; }
-				continue;
-			}
-			if (state == 1 || state == 2 || state == 5) {
-				char quote = state == 1 ? '\'' : (state == 2 ? '"' : '`');
-				if (escaped) {
-					escaped = false;
-				} else if (ch == '\\') {
-					escaped = true;
-				} else if (ch == quote) {
-					state = 0;
-				}
-				continue;
-			}
-			if (ch == '/' && next == '/') { state = 3; i++; continue; }
-			if (ch == '/' && next == '*') { state = 4; i++; continue; }
-			if (ch == '#') { state = 3; continue; }
-			if (ch == '<' && next == '!' && i + 3 < text.length()
-					&& text.charAt(i + 2) == '-' && text.charAt(i + 3) == '-') {
-				state = 6; i += 3; continue;
-			}
-			if (ch == '\'') { state = 1; escaped = false; continue; }
-			if (ch == '"') { state = 2; escaped = false; continue; }
-			if (ch == '`') { state = 5; escaped = false; continue; }
-			if (ch == '(') {
-				if (size == offsets.length) {
-					int[] largerOffsets = new int[size * 2];
-					int[] largerColors = new int[size * 2];
-					System.arraycopy(offsets, 0, largerOffsets, 0, size);
-					System.arraycopy(colors, 0, largerColors, 0, size);
-					offsets = largerOffsets;
-					colors = largerColors;
-				}
-				offsets[size] = i;
-				colors[size] = (size > 0 ? colors[size - 1] + 1 : lineLevel + 1)
-						% parenthesisPalette.length;
-				size++;
-			} else if (ch == ')' && size > 0) {
-				size--;
-				int color = colors[size];
-				drawParenthesis(gc, offsets[size], '(', color, startLine, endLine);
-				drawParenthesis(gc, i, ')', color, startLine, endLine);
-			}
+			drawParenthesis(gc, offset, ParenthesisScanner.glyph(entry),
+					ParenthesisScanner.color(entry), startLine, endLine,
+					selection);
 		}
 	}
 
 	/**
-	 * The indentation level of the line starting at the given index.
-	 *
-	 * @param text
-	 *            the whole document text
-	 * @param lineStart
-	 *            the index of the first character of the line
-	 * @param tabs
-	 *            the width of a tabulation, in columns
-	 * @return the indentation of the line, in levels
+	 * Returns the matching parentheses of the given document, scanned again
+	 * only when the document, its text, the width of a tabulation or the number
+	 * of colors has changed since the last scan.
 	 */
-	private static int indentLevelAt(String text, int lineStart, int tabs) {
-		int column = 0;
-		for (int i = lineStart; i < text.length(); i++) {
-			char ch = text.charAt(i);
-			if (ch == ' ') {
-				column++;
-			} else if (ch == '\t') {
-				column += tabs - column % tabs;
-			} else {
-				break;
+	private long[] getParentheses(IDocument document) {
+		int tabs = tabWidth();
+		int colors = parenthesisPalette.length;
+		long stamp = document instanceof IDocumentExtension4
+				? ((IDocumentExtension4) document).getModificationStamp()
+				: IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP;
+		boolean unknownStamp = stamp == IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP;
+		// without a stamp, the text itself tells whether the document changed
+		String text = unknownStamp ? document.get() : null;
+		if (parentheses == null || document != parenthesesDocument
+				|| stamp != parenthesesStamp
+				|| document.getLength() != parenthesesLength
+				|| (unknownStamp && !text.equals(parenthesesText))
+				|| tabs != parenthesesTabs || colors != parenthesesColors) {
+			if (text == null) {
+				text = document.get();
 			}
+			parentheses = ParenthesisScanner.scan(text, tabs, colors);
+			parenthesesDocument = document;
+			parenthesesStamp = stamp;
+			parenthesesLength = document.getLength();
+			parenthesesText = unknownStamp ? text : null;
+			parenthesesTabs = tabs;
+			parenthesesColors = colors;
 		}
-		return column / tabs;
+		return parentheses;
 	}
 
 	private void drawParenthesis(GC gc, int documentOffset, char glyph,
-			int color, int startLine, int endLine) {
+			int color, int startLine, int endLine, Point selection) {
 		int widgetOffset = getWidgetOffset(documentOffset);
 		if (widgetOffset < 0 || widgetOffset >= fTextWidget.getCharCount()) {
 			return;
@@ -916,7 +926,6 @@ public class IndentGuidePainter implements IPainter, PaintListener {
 		if (line < startLine || line > endLine) {
 			return;
 		}
-		Point selection = fTextWidget.getSelectionRange();
 		if (selection != null && selection.y > 0
 				&& widgetOffset >= selection.x
 				&& widgetOffset < selection.x + selection.y) {

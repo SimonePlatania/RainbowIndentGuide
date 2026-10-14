@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Rainbow Indent Guide Tests
+Bundle-SymbolicName: alien.rainbow.indentguide.tests
+Bundle-Version: 1.0.0.qualifier
+Fragment-Host: alien.rainbow.indentguide
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: junit-jupiter-api;bundle-version="[5.9.0,6.0.0)",
+ org.eclipse.ui.ide.application
+Bundle-Vendor: Simone Platania

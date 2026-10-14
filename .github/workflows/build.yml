@@ -1,0 +1,54 @@
+name: build
+on:
+   push:
+      branches:
+      - master
+   pull_request:
+jobs:
+   build:
+      strategy:
+         fail-fast: false
+         matrix:
+            include:
+            -  name: Linux
+               os: ubuntu-latest
+               # The tests paint editors: they need a display.
+               run: xvfb-run -a mvn -B clean verify
+            -  name: Windows
+               os: windows-latest
+               run: mvn -B clean verify
+      name: build (${{ matrix.name }})
+      runs-on: ${{ matrix.os }}
+      steps:
+      -  name: Checkout
+         uses: actions/checkout@v7
+      -  name: Set up JDK
+         uses: actions/setup-java@v6
+         with:
+            distribution: temurin
+            java-version: 21
+      -  name: Setup Maven
+         uses: stCarolas/setup-maven@v5
+         with:
+           maven-version: 3.9.16
+      -  name: Set up cache
+         uses: actions/cache@v6.1.0
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml', '.mvn/*', '**/MANIFEST.MF', '**/feature.xml') }}
+           restore-keys: |
+             ${{ runner.os }}-maven-
+      -  name: Build
+         run: ${{ matrix.run }}
+      -  name: Upload the test reports
+         if: failure()
+         uses: actions/upload-artifact@v7
+         with:
+            name: surefire-reports-${{ matrix.name }}
+            path: alien.rainbow.indentguide.tests/target/surefire-reports
+      -  name: Upload the update site
+         if: matrix.name == 'Linux'
+         uses: actions/upload-artifact@v7
+         with:
+            name: update-site
+            path: alien.rainbow.indentguide.repository/target/repository

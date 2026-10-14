@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tycho reads the modules from their MANIFEST.MF, feature.xml and category.xml: they need no pom.xml of their own.
+     Its version is set once, in maven.config. -->
+<extensions>
+	<extension>
+		<groupId>org.eclipse.tycho</groupId>
+		<artifactId>tycho-build</artifactId>
+		<version>${tycho-version}</version>
+	</extension>
+</extensions>

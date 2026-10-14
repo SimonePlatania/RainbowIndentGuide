@@ -178,10 +178,13 @@ are not looking at a second workspace.
 
 ## Layout
 
-    alien.rainbow.indentguide/         plug-in
-    alien.rainbow.indentguide.feature/ feature
-    docs/                              p2 repository, release JARs and ZIP
-    build.sh                           regenerates docs/ and the release zip
+    alien.rainbow.indentguide/            plug-in
+    alien.rainbow.indentguide.tests/      tests, a fragment of the plug-in
+    alien.rainbow.indentguide.feature/    feature
+    alien.rainbow.indentguide.repository/ category of the p2 repository the Maven build makes
+    docs/                                 p2 repository, release JARs and ZIP
+    build.sh                              regenerates docs/ and the release zip
+    pom.xml, .mvn/                        the Maven build, with Tycho
 
 `docs/` is the only copy of the update site, and it is what
 *Help > Install New Software...* reads over HTTP. Two things in it are load
@@ -197,6 +200,22 @@ in `feature.xml` to match, then:
 It compiles with `--release 8`, rebuilds both jars, rewrites the version in
 `site.xml`, republishes the p2 metadata and repacks the archive. It refuses to
 run if the two versions disagree.
+
+## Build and tests
+
+    mvn clean verify
+
+builds the plug-in and the feature with [Tycho](https://tycho.eclipseprojects.io),
+against Eclipse 2026-09 (`eclipse-repo.url` in `pom.xml`), runs the tests, and
+makes a p2 repository in `alien.rainbow.indentguide.repository/target/repository`.
+It needs JDK 21 and Maven 3.9. The modules have no `pom.xml`: the versions are
+the ones of the manifest and of `feature.xml`, still to be bumped together, which
+only `build.sh` checks. The tests paint a text viewer in a window
+(`xvfb-run mvn clean verify` on a server).
+
+GitHub Actions runs the same build on Linux and on Windows for each push and
+pull request, and keeps the p2 repository of the Linux build as an artifact.
+`docs/` is still made by `build.sh`.
 
 ## History
 
